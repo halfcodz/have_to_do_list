@@ -4,7 +4,7 @@
  * - 이미지 / 아이콘 : cache-first    (빠르게, 없으면 네트워크)
  * - push           : Cloudflare Worker가 보낸 알림 표시
  */
-var VERSION = "2026-09-02e";
+var VERSION = "2026-09-02f";
 var CACHE = "jotdoem-" + VERSION;
 
 var PRECACHE = [
