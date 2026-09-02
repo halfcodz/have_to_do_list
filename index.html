@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f9e44">
+<meta name="description" content="오늘 반드시 해야 할 일만 적는 have-to-do 리스트. 마감 전에 개빡친 개구리가 다그치고, 넘기면 주먹질하러 온다.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="좋됨감지">
+<meta property="og:type" content="website">
+<meta property="og:title" content="좋됨감지앱">
+<meta property="og:description" content="오늘 반드시 해야 할 일만. 마감 넘기면 개구리가 주먹질하러 온다.">
+<meta property="og:image" content="worry.png">
+<meta name="twitter:card" content="summary">
+<title>좋됨감지앱</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B8%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#f4f1ea;
+    --surface:#ffffff;
+    --line:#e7e2d6;
+    --text:#1f1d1a;
+    --muted:#8a8378;
+    --accent:#2f9e44;
+    --accent-ink:#1b5e28;
+    --amber:#e0921f;
+    --red:#e03131;
+    --darkred:#a51d1d;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(30,25,15,.06), 0 8px 24px rgba(30,25,15,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Apple SD Gothic Neo","Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:460px;
+    min-height:100%;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    padding:22px 20px 16px;
+    position:sticky;top:0;z-index:5;
+    background:linear-gradient(var(--bg) 78%, rgba(244,241,234,0));
+  }
+  .brand{
+    display:flex;align-items:baseline;gap:8px;
+  }
+  .brand h1{
+    font-size:22px;font-weight:800;letter-spacing:-.02em;
+  }
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);transform:translateY(-3px)}
+  .date{color:var(--muted);font-size:13px;margin-top:2px}
+  .progress{
+    margin-top:14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .progress[hidden]{display:none}
+  .bar{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .35s ease}
+  .count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ---------- list ---------- */
+  main{flex:1;padding:6px 14px 150px}
+  ul{list-style:none}
+  li.task{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:14px 14px 14px 16px;
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:10px;
+  }
+  li.task .time{
+    font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;
+    letter-spacing:-.01em;min-width:56px;
+  }
+  li.task .body{flex:1;min-width:0}
+  li.task .title{
+    font-size:15.5px;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  li.task .remain{
+    display:inline-block;margin-top:4px;
+    font-size:12px;font-weight:700;color:var(--muted);
+  }
+  .remain.soon{color:var(--amber)}
+  .remain.urgent{color:var(--red)}
+  .remain.over{color:var(--darkred)}
+  .badge{
+    display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;
+    background:#fbeaea;color:var(--darkred);font-size:11px;font-weight:800;
+  }
+
+  li.task.over{
+    border-color:#f0c9c9;
+    background:linear-gradient(var(--surface),var(--surface)) padding-box,
+               linear-gradient(#fbeaea,#fbeaea) border-box;
+    background:#fdf3f2;
+  }
+  li.task.over .time{color:var(--darkred)}
+  li.task.soon{background:#fdf8f0}
+
+  li.task.done{opacity:.5}
+  li.task.done.over,li.task.done.soon{background:var(--surface)}
+  li.task.done .title{text-decoration:line-through;text-decoration-thickness:2px}
+  li.task.done .time{color:var(--muted)}
+
+  .check{
+    width:30px;height:30px;flex:none;border-radius:50%;
+    border:2px solid var(--line);background:var(--surface);
+    display:grid;place-items:center;cursor:pointer;
+    transition:background .15s,border-color .15s,transform .1s;
+  }
+  .check:active{transform:scale(.9)}
+  .check svg{width:16px;height:16px;stroke:var(--surface);stroke-width:3.5;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  li.task.done .check{background:var(--accent);border-color:var(--accent)}
+  li.task.done .check svg{opacity:1}
+
+  .del{
+    flex:none;width:28px;height:28px;border:0;background:transparent;color:var(--muted);
+    font-size:15px;cursor:pointer;opacity:.4;border-radius:8px;
+  }
+  .del:hover{opacity:1;color:var(--darkred)}
+  .del.confirm{opacity:1;color:var(--surface);background:var(--darkred);font-size:11px;font-weight:800;width:auto;padding:0 8px}
+
+  .empty{
+    text-align:center;color:var(--muted);padding:70px 24px;
+  }
+  .empty .big{font-size:40px;margin-bottom:10px}
+  .empty p{font-size:14px}
+  .allclear{
+    text-align:center;padding:28px 20px 8px;color:var(--accent-ink);font-weight:800;font-size:15px;
+  }
+
+  .foot{
+    text-align:center;padding:26px 20px 4px;
+  }
+  .linkbtn{
+    border:0;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;
+    font-weight:700;cursor:pointer;padding:4px 6px;border-radius:6px;
+  }
+  .linkbtn:hover{color:var(--text)}
+  .foot .sep{color:var(--line)}
+  .foot .note{margin-top:6px;color:var(--muted);font-size:11px;opacity:.75}
+
+  /* ---------- add bar ---------- */
+  .addbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:6;
+    display:flex;justify-content:center;
+    padding:12px 14px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(rgba(244,241,234,0), var(--bg) 32%);
+  }
+  .addbar form{
+    width:100%;max-width:432px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:8px;
+    display:grid;
+    grid-template-columns:1fr auto auto;
+    gap:8px;
+  }
+  .addbar input[type=text]{
+    border:0;outline:0;background:transparent;font:inherit;font-size:15px;
+    padding:10px 8px 10px 10px;color:var(--text);min-width:0;
+  }
+  .addbar input[type=time]{
+    border:0;outline:0;background:var(--bg);border-radius:10px;font:inherit;
+    font-size:14px;font-weight:700;padding:8px;color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+  .addbar button{
+    border:0;background:var(--accent);color:#fff;font:inherit;font-weight:800;
+    font-size:14px;padding:0 16px;border-radius:10px;cursor:pointer;
+  }
+  .addbar button:active{transform:scale(.97)}
+  .addbar button:disabled{background:var(--line);color:var(--muted);cursor:default}
+
+  /* ---------- alarm overlay ---------- */
+  .overlay{
+    position:fixed;inset:0;z-index:50;
+    background:rgba(20,17,12,.82);
+    backdrop-filter:blur(3px);
+    display:none;
+    flex-direction:column;align-items:center;justify-content:center;
+    padding:28px;text-align:center;
+  }
+  .overlay.show{display:flex}
+  .overlay img{
+    max-width:min(78vw,320px);max-height:44vh;
+    object-fit:contain;
+    filter:drop-shadow(0 12px 30px rgba(0,0,0,.4));
+    -webkit-user-drag:none;user-select:none;
+  }
+  .overlay .kicker{color:#ffd9d9;font-size:13px;font-weight:800;letter-spacing:.06em;margin-top:22px}
+  .overlay .say{color:#fff;font-size:24px;font-weight:800;line-height:1.35;margin-top:8px;max-width:20ch}
+  .overlay .task-name{color:#c9c4b8;font-size:14px;margin-top:12px}
+  .overlay .task-name b{color:#fff}
+  .overlay .btns{display:flex;gap:10px;margin-top:26px;width:100%;max-width:320px}
+  .overlay .btns button{
+    flex:1;border:0;font:inherit;font-weight:800;font-size:15px;
+    padding:14px 10px;border-radius:14px;cursor:pointer;
+  }
+  .overlay .did{background:var(--accent);color:#fff}
+  .overlay .later{background:rgba(255,255,255,.14);color:#fff}
+  .overlay .btns button:active{transform:scale(.97)}
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+    background:#1f1d1a;color:#fff;font-size:13px;font-weight:600;
+    padding:10px 16px;border-radius:99px;z-index:40;
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#17150f;--surface:#221f18;--line:#35312747;--line:#332f26;
+      --text:#f2efe6;--muted:#9a9384;
+      --accent:#41b45a;--accent-ink:#a7e3b4;
+    }
+    .badge{background:#3a1e1e;color:#ffb4b4}
+    .del.confirm{color:#fff}
+    li.task.over{background:#2a1c17;border-color:#4a2a24}
+    li.task.over .time{color:#ff9b9b}
+    li.task.soon{background:#272117}
+    li.task.done.over,li.task.done.soon{background:var(--surface)}
+    .remain.over{color:#ff9b9b}
+    .remain.soon{color:#f0b866}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><h1>좋됨감지앱</h1><span class="dot"></span></div>
+    <div class="date" id="date"></div>
+    <div class="progress">
+      <div class="bar"><i id="barfill"></i></div>
+      <span class="count" id="count">0 / 0</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="allclear" id="allclear" hidden>오늘 할 일 다 했다. 안 좋됐네. 👍</div>
+    <ul id="list"></ul>
+    <div class="empty" id="empty" hidden>
+      <div class="big">📝</div>
+      <p>오늘 <b>반드시</b> 해야 할 일을 적어.</p>
+    </div>
+
+    <footer class="foot">
+      <button type="button" class="linkbtn" id="exportbtn">백업 내보내기</button>
+      <span class="sep">·</span>
+      <button type="button" class="linkbtn" id="importbtn">가져오기</button>
+      <input type="file" id="importfile" accept="application/json,.json" hidden>
+      <p class="note">모든 데이터는 이 기기 브라우저에만 저장됩니다.</p>
+    </footer>
+  </main>
+
+  <div class="addbar">
+    <form id="addform" autocomplete="off">
+      <input type="text" id="ititle" placeholder="반드시 해야 할 일" maxlength="60" required>
+      <input type="time" id="itime" required>
+      <button type="submit" id="addbtn">추가</button>
+    </form>
+  </div>
+
+  <div class="overlay" id="overlay" role="alertdialog" aria-modal="true">
+    <img id="ov-img" alt="">
+    <div class="kicker" id="ov-kicker"></div>
+    <div class="say" id="ov-say"></div>
+    <div class="task-name" id="ov-task"></div>
+    <div class="btns">
+      <button class="later" id="ov-later">아직...</button>
+      <button class="did" id="ov-did">했어</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORE_KEY = "jotdoem.tasks.v1";
+  var THRESHOLDS = [60, 30, 10];                 // minutes before due
+  var PUNCH_INTERVAL_MS = 3 * 60 * 1000;         // repeat punch every 3 min while overdue
+  var TICK_MS = 15 * 1000;
+
+  var IMG = {
+    60: "worry.png",
+    30: "doubt.png",
+    10: "anxiety.png",
+    punch: "punch-2.png"
+  };
+  var SAY = {
+    60: { kicker: "1시간 전", say: "1시간 남았다. 이거 했어?" },
+    30: { kicker: "30분 전",  say: "30분 남았다. 진짜 하고 있어?" },
+    10: { kicker: "10분 전",  say: "10분 남았다. 너 안 했지?!" },
+    punch: { kicker: "마감 초과", say: "마감 지났다. 좋됐네." }
+  };
+
+  // ---------- state ----------
+  var tasks = load();
+  var alarmQueue = [];
+  var overlayOpen = false;
+  var currentAlarm = null;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var listEl = $("list"), emptyEl = $("empty"), allclearEl = $("allclear");
+  var overlay = $("overlay");
+
+  // ---------- persistence ----------
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function save(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){}
+  }
+
+  // ---------- date helpers ----------
+  function startOfToday(){
+    var d = new Date(); d.setHours(0,0,0,0); return d.getTime();
+  }
+  function startOfDay(ts){
+    var d = new Date(ts); d.setHours(0,0,0,0); return d.getTime();
+  }
+  function daysOverdue(due){
+    var diff = startOfToday() - startOfDay(due);
+    return diff > 0 ? Math.round(diff / 86400000) : 0;
+  }
+
+  // carry over: drop finished tasks from previous days, keep unfinished ones
+  function tidy(){
+    var today = startOfToday();
+    var before = tasks.length;
+    tasks = tasks.filter(function(t){
+      if(t.done && t.doneAt && t.doneAt < today) return false;
+      return true;
+    });
+    if(tasks.length !== before) save();
+  }
+
+  // ---------- rendering ----------
+  function fmtDate(){
+    var d = new Date();
+    var days = ["일","월","화","수","목","금","토"];
+    return d.getFullYear() + "년 " + (d.getMonth()+1) + "월 " + d.getDate() + "일 " + days[d.getDay()] + "요일";
+  }
+  function fmtClock(ts){
+    var d = new Date(ts);
+    return ("0"+d.getHours()).slice(-2) + ":" + ("0"+d.getMinutes()).slice(-2);
+  }
+  function remainInfo(t){
+    if(t.done) return { text:"완료", cls:"" };
+    var diff = t.due - Date.now();
+    if(diff <= 0){
+      var od = daysOverdue(t.due);
+      return { text: od >= 1 ? od + "일 지남" : "마감 지남", cls:"over", over:true, days:od };
+    }
+    var min = Math.floor(diff / 60000);
+    if(min < 1) return { text:"곧 마감", cls:"urgent" };
+    if(min < 10) return { text:min + "분 남음", cls:"urgent" };
+    if(min < 60) return { text:min + "분 남음", cls:"soon" };
+    var h = Math.floor(min / 60), m = min % 60;
+    return { text: h + "시간 " + (m ? m + "분 " : "") + "남음", cls:"" };
+  }
+
+  function sortTasks(){
+    tasks.sort(function(a,b){
+      if(a.done !== b.done) return a.done ? 1 : -1;
+      return a.due - b.due;
+    });
+  }
+
+  function render(){
+    sortTasks();
+    listEl.innerHTML = "";
+    var doneCount = 0;
+
+    tasks.forEach(function(t){
+      if(t.done) doneCount++;
+      var li = document.createElement("li");
+      li.dataset.id = t.id;
+
+      var r = remainInfo(t);
+      var badge = (!t.done && r.over && r.days >= 1) ? '<span class="badge">이월</span>' : "";
+
+      li.className = "task"
+        + (t.done ? " done" : "")
+        + (!t.done && r.cls === "over" ? " over" : "")
+        + (!t.done && (r.cls === "soon" || r.cls === "urgent") ? " soon" : "");
+
+      li.innerHTML =
+        '<span class="time">' + fmtClock(t.due) + '</span>' +
+        '<div class="body">' +
+          '<div class="title">' + escapeHtml(t.title) + '</div>' +
+          '<span class="remain ' + r.cls + '">' + r.text + badge + '</span>' +
+        '</div>' +
+        '<button class="del" aria-label="삭제">✕</button>' +
+        '<button class="check" aria-label="완료 표시">' +
+          '<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>' +
+        '</button>';
+
+      li.querySelector(".check").addEventListener("click", function(){ toggleDone(t.id); });
+      wireDelete(li.querySelector(".del"), t.id);
+      listEl.appendChild(li);
+    });
+
+    var total = tasks.length;
+    emptyEl.hidden = total !== 0;
+    document.querySelector(".progress").hidden = total === 0;
+    allclearEl.hidden = !(total > 0 && doneCount === total);
+
+    $("count").textContent = doneCount + " / " + total;
+    $("barfill").style.width = (total ? (doneCount / total * 100) : 0) + "%";
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  // ---------- actions ----------
+  function addTask(title, hhmm){
+    var parts = hhmm.split(":");
+    var d = new Date();
+    d.setHours(+parts[0], +parts[1], 0, 0);
+    tasks.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      title: title,
+      due: d.getTime(),
+      done: false,
+      doneAt: null,
+      fired: {},
+      lastPunch: 0
+    });
+    save();
+    render();
+    ensureNotifyPermission();
+  }
+
+  function toggleDone(id){
+    var t = findTask(id);
+    if(!t) return;
+    t.done = !t.done;
+    t.doneAt = t.done ? Date.now() : null;
+    save();
+    render();
+    // clear any pending alarms for a finished task
+    alarmQueue = alarmQueue.filter(function(a){ return a.id !== id || !t.done; });
+    if(t.done && currentAlarm && currentAlarm.id === id) closeOverlay();
+  }
+
+  function removeTask(id){
+    tasks = tasks.filter(function(t){ return t.id !== id; });
+    save();
+    render();
+    if(currentAlarm && currentAlarm.id === id) closeOverlay();
+  }
+
+  function findTask(id){
+    for(var i=0;i<tasks.length;i++) if(tasks[i].id === id) return tasks[i];
+    return null;
+  }
+
+  function wireDelete(btn, id){
+    var armed = false, timer;
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      if(armed){ removeTask(id); return; }
+      armed = true;
+      btn.textContent = "삭제";
+      btn.classList.add("confirm");
+      timer = setTimeout(disarm, 2500);
+    });
+    function disarm(){
+      armed = false;
+      clearTimeout(timer);
+      btn.textContent = "✕";
+      btn.classList.remove("confirm");
+    }
+    btn.addEventListener("blur", disarm);
+  }
+
+  // ---------- alarm engine ----------
+  function checkAlarms(){
+    var now = Date.now();
+    tasks.forEach(function(t){
+      if(t.done) return;
+      if(!t.fired) t.fired = {};
+      var diff = t.due - now;
+
+      if(diff > 0){
+        var crossed = THRESHOLDS.filter(function(m){
+          return !t.fired[m] && diff <= m * 60000;
+        });
+        if(crossed.length){
+          crossed.forEach(function(m){ t.fired[m] = true; });
+          save();
+          enqueue(t, Math.min.apply(null, crossed));
+        }
+      } else {
+        // overdue & not done -> punch, repeating
+        if(now - (t.lastPunch || 0) >= PUNCH_INTERVAL_MS){
+          t.lastPunch = now;
+          save();
+          enqueue(t, "punch");
+        }
+      }
+    });
+  }
+
+  function enqueue(task, kind){
+    // de-dupe identical pending alarm
+    var dup = alarmQueue.some(function(a){ return a.id === task.id && a.kind === kind; });
+    if(!dup && !(currentAlarm && currentAlarm.id === task.id && currentAlarm.kind === kind)){
+      alarmQueue.push({ id: task.id, kind: kind, title: task.title });
+    }
+    pump();
+  }
+
+  function pump(){
+    if(overlayOpen || !alarmQueue.length) return;
+    var a = alarmQueue.shift();
+    var t = findTask(a.id);
+    if(!t || t.done){ pump(); return; }
+    showOverlay(a);
+  }
+
+  function showOverlay(a){
+    overlayOpen = true;
+    currentAlarm = a;
+    var conf = SAY[a.kind];
+    $("ov-img").src = IMG[a.kind];
+    $("ov-kicker").textContent = conf.kicker;
+    $("ov-say").textContent = conf.say;
+    $("ov-task").innerHTML = "「<b>" + escapeHtml(a.title) + "</b>」";
+    overlay.classList.add("show");
+    beep(a.kind === "punch");
+    notify(conf.say, a.title);
+  }
+
+  function closeOverlay(){
+    overlay.classList.remove("show");
+    overlayOpen = false;
+    currentAlarm = null;
+    setTimeout(pump, 150);
+  }
+
+  $("ov-did").addEventListener("click", function(){
+    if(currentAlarm) toggleDone(currentAlarm.id);
+    closeOverlay();
+  });
+  $("ov-later").addEventListener("click", function(){
+    var wasPunch = currentAlarm && currentAlarm.kind === "punch";
+    closeOverlay();
+    if(wasPunch) toast("3분 뒤에 또 온다.");
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && overlayOpen) $("ov-later").click();
+  });
+
+  // ---------- beep ----------
+  var actx = null;
+  function beep(strong){
+    try{
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if(actx.state === "suspended") actx.resume();
+      var n = strong ? 4 : 2;
+      for(var i=0;i<n;i++){
+        var t0 = actx.currentTime + i * 0.22;
+        var o = actx.createOscillator(), g = actx.createGain();
+        o.type = "square";
+        o.frequency.value = strong ? 660 : 880;
+        o.connect(g); g.connect(actx.destination);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.14, t0 + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+        o.start(t0); o.stop(t0 + 0.2);
+      }
+    }catch(e){}
+  }
+
+  // ---------- notifications ----------
+  function ensureNotifyPermission(){
+    try{
+      if("Notification" in window && Notification.permission === "default"){
+        Notification.requestPermission();
+      }
+    }catch(e){}
+  }
+  function notify(body, title){
+    try{
+      if(!("Notification" in window) || Notification.permission !== "granted") return;
+      if(!document.hidden) return;
+      new Notification("좋됨감지앱 — " + title, { body: body, tag: "jotdoem" });
+    }catch(e){}
+  }
+
+  // ---------- toast ----------
+  var toastTimer;
+  function toast(msg){
+    var el = $("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2400);
+  }
+
+  // ---------- form ----------
+  var form = $("addform"), ititle = $("ititle"), itime = $("itime"), addbtn = $("addbtn");
+  function syncBtn(){ addbtn.disabled = !(ititle.value.trim() && itime.value); }
+  ititle.addEventListener("input", syncBtn);
+  itime.addEventListener("input", syncBtn);
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var title = ititle.value.trim();
+    if(!title || !itime.value) return;
+    addTask(title, itime.value);
+    ititle.value = "";
+    syncBtn();
+    ititle.focus();
+  });
+  // default time = next full hour
+  (function(){
+    var d = new Date(); d.setHours(d.getHours()+1, 0, 0, 0);
+    itime.value = ("0"+d.getHours()).slice(-2) + ":" + ("0"+d.getMinutes()).slice(-2);
+    syncBtn();
+  })();
+
+  // ---------- backup: export / import ----------
+  $("exportbtn").addEventListener("click", function(){
+    var payload = {
+      app: "jotdoem",
+      schema: 1,
+      exportedAt: new Date().toISOString(),
+      tasks: tasks
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "좋됨감지-백업-" + new Date().toISOString().slice(0,10) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    toast("백업 파일을 저장했다.");
+  });
+
+  $("importbtn").addEventListener("click", function(){ $("importfile").click(); });
+  $("importfile").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var incoming;
+      try{
+        var data = JSON.parse(reader.result);
+        incoming = Array.isArray(data) ? data : data.tasks;
+      }catch(err){ incoming = null; }
+      if(!Array.isArray(incoming)){ toast("백업 파일을 읽지 못했다."); return; }
+
+      var clean = incoming.filter(function(t){
+        return t && typeof t.title === "string" && typeof t.due === "number";
+      }).map(function(t){
+        return {
+          id: t.id || (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+          title: String(t.title).slice(0,60),
+          due: t.due,
+          done: !!t.done,
+          doneAt: t.doneAt || null,
+          fired: t.fired && typeof t.fired === "object" ? t.fired : {},
+          lastPunch: t.lastPunch || 0
+        };
+      });
+      if(!clean.length){ toast("가져올 일정이 없다."); return; }
+      if(!window.confirm(clean.length + "개 일정으로 현재 목록을 덮어쓴다. 계속?")) return;
+
+      tasks = clean;
+      save();
+      render();
+      checkAlarms();
+      toast("가져오기 완료.");
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- boot ----------
+  $("date").textContent = fmtDate();
+  tidy();
+  render();
+  checkAlarms();
+  setInterval(function(){ tidy(); render(); checkAlarms(); }, TICK_MS);
+  document.addEventListener("visibilitychange", function(){
+    if(!document.hidden){ render(); checkAlarms(); }
+  });
+
+  // midnight roll-over: re-tidy and refresh the date label
+  setInterval(function(){
+    var shown = $("date").textContent;
+    var fresh = fmtDate();
+    if(shown !== fresh){ $("date").textContent = fresh; tidy(); render(); }
+  }, 60 * 1000);
+
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
