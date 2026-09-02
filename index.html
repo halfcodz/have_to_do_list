@@ -798,7 +798,10 @@
           <p>오늘 <b>반드시</b> 해야 할 일을 적어.</p>
         </div>
         <footer class="foot">
-          <p class="note">모든 일정과 기록은 이 기기에만 저장됩니다.</p>
+          <p class="note" id="pushnote">모든 일정과 기록은 이 기기에만 저장됩니다.</p>
+          <button type="button" class="linkbtn" id="pushtest" hidden>
+            테스트 알림 받기
+          </button>
         </footer>
       </main>
 
@@ -948,58 +951,57 @@
           } catch (e) {}
         }
 
-        // ---------- date helpers ----------
-        function startOfToday() {
-          var d = new Date();
-          d.setHours(0, 0, 0, 0);
-          return d.getTime();
+        // ---------- date helpers — 모든 시각은 대한민국 시간(KST, UTC+9 고정) 기준 ----------
+        var KST_MS = 9 * 60 * 60000; // 한국 표준시는 서머타임이 없어 항상 +9시간
+        function pad2(n) {
+          return ("0" + n).slice(-2);
         }
+        // 주어진 순간(기본: 지금)의 KST 달력 구성요소
+        function kstParts(ts) {
+          var d = new Date((ts == null ? Date.now() : ts) + KST_MS);
+          return {
+            y: d.getUTCFullYear(),
+            mo: d.getUTCMonth(),
+            d: d.getUTCDate(),
+            h: d.getUTCHours(),
+            mi: d.getUTCMinutes(),
+            dow: d.getUTCDay(),
+          };
+        }
+        // KST 기준 오늘 날짜의 HH:MM 을 절대 시각(epoch ms)으로
+        function kstTimestamp(hh, mm) {
+          var p = kstParts();
+          return Date.UTC(p.y, p.mo, p.d, hh, mm, 0) - KST_MS;
+        }
+        // ts 가 속한 날의 KST 자정(epoch ms)
         function startOfDay(ts) {
-          var d = new Date(ts);
-          d.setHours(0, 0, 0, 0);
-          return d.getTime();
+          var p = kstParts(ts);
+          return Date.UTC(p.y, p.mo, p.d, 0, 0, 0) - KST_MS;
+        }
+        function startOfToday() {
+          return startOfDay(Date.now());
         }
         function daysOverdue(due) {
           var diff = startOfToday() - startOfDay(due);
           return diff > 0 ? Math.round(diff / 86400000) : 0;
         }
         function fmtDate() {
-          var d = new Date();
+          var p = kstParts();
           return (
-            d.getFullYear() +
-            "년 " +
-            (d.getMonth() + 1) +
-            "월 " +
-            d.getDate() +
-            "일 " +
-            DAYS[d.getDay()] +
-            "요일"
+            p.y + "년 " + (p.mo + 1) + "월 " + p.d + "일 " + DAYS[p.dow] + "요일"
           );
         }
         function fmtDay(ts) {
-          var d = new Date(ts),
-            t = new Date();
-          t.setHours(0, 0, 0, 0);
-          var diff = Math.round((t.getTime() - startOfDay(ts)) / 86400000);
-          var base =
-            d.getMonth() +
-            1 +
-            "월 " +
-            d.getDate() +
-            "일 (" +
-            DAYS[d.getDay()] +
-            ")";
+          var p = kstParts(ts);
+          var diff = Math.round((startOfToday() - startOfDay(ts)) / 86400000);
+          var base = p.mo + 1 + "월 " + p.d + "일 (" + DAYS[p.dow] + ")";
           if (diff === 0) return "오늘 · " + base;
           if (diff === 1) return "어제 · " + base;
-          return d.getFullYear() + "년 " + base;
+          return p.y + "년 " + base;
         }
         function fmtClock(ts) {
-          var d = new Date(ts);
-          return (
-            ("0" + d.getHours()).slice(-2) +
-            ":" +
-            ("0" + d.getMinutes()).slice(-2)
-          );
+          var p = kstParts(ts);
+          return pad2(p.h) + ":" + pad2(p.mi);
         }
 
         // ---------- carry-over / archiving ----------
@@ -1240,9 +1242,7 @@
 
         function addTask(title, stakes, hhmm) {
           var parts = hhmm.split(":");
-          var d = new Date();
-          d.setHours(+parts[0], +parts[1], 0, 0);
-          var due = d.getTime();
+          var due = kstTimestamp(+parts[0], +parts[1]); // 오늘 HH:MM (한국 시간)
           tasks.push({
             id: newId(),
             title: title,
@@ -1468,8 +1468,9 @@
               Notification.permission === "default"
             ) {
               Notification.requestPermission().then(function (p) {
+                refreshPushUI();
                 if (p === "granted") {
-                  subscribePush().then(syncPush);
+                  subscribePush().then(syncPush).then(refreshPushUI);
                 }
               });
             }
@@ -1587,6 +1588,61 @@
           }, 1500);
         }
 
+        // ---------- push 상태 표시 + 테스트 버튼 (아이폰 디버깅용) ----------
+        function refreshPushUI() {
+          var note = $("pushnote"),
+            btn = $("pushtest");
+          btn.hidden = true;
+          if (!PUSH_API || !VAPID_PUBLIC_KEY) {
+            note.textContent = "모든 일정과 기록은 이 기기에만 저장됩니다.";
+            return;
+          }
+          if (!("Notification" in window) || !("PushManager" in window)) {
+            note.textContent =
+              "이 화면에선 백그라운드 알림 불가. 아이폰은 공유 → 홈 화면에 추가 후 그 아이콘으로 열어야 함.";
+            return;
+          }
+          var p = Notification.permission;
+          if (p === "granted") {
+            note.textContent = "백그라운드 알림: 켜짐 (아래 버튼으로 테스트)";
+            btn.hidden = false;
+          } else if (p === "denied") {
+            note.textContent =
+              "알림이 차단됨. 아이폰 설정 → 좋됨감지 → 알림에서 허용으로 바꿔줘.";
+          } else {
+            note.textContent = "일정을 추가하면 알림 권한을 물어봐. 허용해줘.";
+          }
+        }
+        $("pushtest").addEventListener("click", function () {
+          toast("보내는 중...");
+          subscribePush()
+            .then(function (sub) {
+              if (!sub) {
+                toast("구독 실패. 알림 권한을 확인해줘.");
+                return;
+              }
+              return fetch(PUSH_API.replace(/\/+$/, "") + "/test", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ subscription: sub.toJSON() }),
+              })
+                .then(function (r) {
+                  return r.json();
+                })
+                .then(function (j) {
+                  if (j.status >= 200 && j.status < 300)
+                    toast("전송 완료. 몇 초 내 알림이 와야 정상.");
+                  else
+                    toast(
+                      "푸시 서비스 거부: " + j.status + (j.err ? " / " + j.err : ""),
+                    );
+                });
+            })
+            .catch(function () {
+              toast("연결 실패. 인터넷을 확인해줘.");
+            });
+        });
+
         // ---------- toast ----------
         var toastTimer;
         function toast(msg) {
@@ -1627,12 +1683,9 @@
           ititle.focus();
         });
         (function () {
-          var d = new Date();
-          d.setHours(d.getHours() + 1, 0, 0, 0);
-          itime.value =
-            ("0" + d.getHours()).slice(-2) +
-            ":" +
-            ("0" + d.getMinutes()).slice(-2);
+          // 기본값: 한국 시간 기준 다음 정시
+          var nh = kstParts().h + 1;
+          itime.value = nh >= 24 ? "23:59" : pad2(nh) + ":00";
           syncBtn();
         })();
 
@@ -1695,6 +1748,7 @@
             render();
             checkAlarms();
             syncPush();
+            refreshPushUI();
           }
         });
 
@@ -1708,11 +1762,13 @@
           }
         }, 60 * 1000);
 
+        refreshPushUI();
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker
             .register("sw.js")
             .then(function () {
-              if (pushEnabled()) subscribePush().then(syncPush);
+              refreshPushUI();
+              if (pushEnabled()) subscribePush().then(syncPush).then(refreshPushUI);
             })
             .catch(function () {});
         }

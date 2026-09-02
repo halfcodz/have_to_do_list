@@ -37,6 +37,41 @@ export class Hub {
       return new Response("ok");
     }
 
+    // 즉시 테스트 푸시 1건
+    if (url.pathname === "/test" && req.method === "POST") {
+      let p;
+      try { p = await req.json(); } catch { return json({ error: "bad json" }, 400); }
+      const sub = p && p.subscription;
+      if (!sub || !sub.endpoint || !sub.keys) return json({ error: "bad subscription" }, 400);
+      let status = 0, err = null;
+      try {
+        status = await sendPush(sub, JSON.stringify({
+          title: "좋됨감지앱", body: "테스트 알림이야. 이게 보이면 성공.", tag: "jotdoem-test", url: "./",
+        }), this.env);
+      } catch (e) { err = String(e && e.message || e); }
+      return json({ status, err });
+    }
+
+    // 저장 상태 확인
+    if (url.pathname === "/debug") {
+      const subs = await this.state.storage.list({ prefix: "sub:" });
+      const scheds = await this.state.storage.list({ prefix: "sched:" });
+      let pending = 0, soonest = null;
+      for (const arr of scheds.values()) {
+        for (const r of arr) {
+          if (!r.sent) { pending++; if (soonest === null || r.fireAt < soonest) soonest = r.fireAt; }
+        }
+      }
+      return json({
+        subscriptions: subs.size,
+        schedules: scheds.size,
+        pendingReminders: pending,
+        soonestFireAt: soonest,
+        nextAlarm: await this.state.storage.getAlarm(),
+        now: Date.now(),
+      });
+    }
+
     if (url.pathname === "/sync" && req.method === "POST") {
       let payload;
       try { payload = await req.json(); } catch { return json({ error: "bad json" }, 400); }
