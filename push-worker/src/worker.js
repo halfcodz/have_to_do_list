@@ -209,6 +209,7 @@ async function hkdf(salt, ikm, info, length) {
 let _vapid = null;
 async function getVapid(env) {
   if (_vapid) return _vapid;
+  if (!env.VAPID_JWK) throw new Error("VAPID_JWK secret 미설정 — `npx wrangler secret put VAPID_JWK` 실행 필요");
   const jwk = JSON.parse(env.VAPID_JWK);
   const signKey = await crypto.subtle.importKey(
     "jwk",
