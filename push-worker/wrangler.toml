@@ -1,0 +1,22 @@
+name = "jotdoem-push"
+main = "src/worker.js"
+compatibility_date = "2024-11-01"
+
+# 앱을 꺼도 알림을 보내는 예약 저장소 (SQLite 기반 Durable Object — 무료 플랜 지원)
+[[durable_objects.bindings]]
+name = "HUB"
+class_name = "Hub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Hub"]
+
+# 놓친 알람 보정용 안전망 (5분마다). 실제 발송은 Durable Object alarm이 담당.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+# 푸시 서비스에 보내는 연락처. 본인 이메일로 바꿔도 되고 그대로 둬도 동작한다.
+VAPID_SUBJECT = "mailto:jotdoem@example.com"
+
+# 아래는 `npx wrangler secret put VAPID_JWK` 로 넣는다 (genkeys.mjs 출력의 첫 줄 JSON).

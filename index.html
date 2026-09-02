@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#2f9e44">
-<meta name="description" content="오늘 반드시 해야 할 일만 적는 have-to-do 리스트. 마감 전에 개빡친 개구리가 다그치고, 넘기면 주먹질하러 온다.">
+<meta name="description" content="오늘 반드시 해야 할 일과 못 했을 때 벌어지는 일을 적는 have-to-do 리스트.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="좋됨감지">
 <meta property="og:type" content="website">
 <meta property="og:title" content="좋됨감지앱">
-<meta property="og:description" content="오늘 반드시 해야 할 일만. 마감 넘기면 개구리가 주먹질하러 온다.">
+<meta property="og:description" content="해야 할 일과, 안 하면 벌어지는 일. 마감 넘기면 개구리가 주먹질하러 온다.">
 <meta property="og:image" content="worry.png">
 <meta name="twitter:card" content="summary">
 <title>좋됨감지앱</title>
@@ -28,6 +28,7 @@
     --muted:#8a8378;
     --accent:#2f9e44;
     --accent-ink:#1b5e28;
+    --accent-tint:#e6f4ea;
     --amber:#e0921f;
     --red:#e03131;
     --darkred:#a51d1d;
@@ -73,7 +74,7 @@
   header{
     flex:none;
     z-index:5;
-    padding:calc(16px + env(safe-area-inset-top)) clamp(16px,5vw,22px) 13px;
+    padding:calc(14px + env(safe-area-inset-top)) clamp(16px,5vw,22px) 13px;
     background:var(--bg);
     border-bottom:1px solid transparent;
     transition:border-color .2s,box-shadow .2s;
@@ -82,9 +83,16 @@
     border-bottom-color:var(--line);
     box-shadow:0 8px 18px -12px rgba(30,25,15,.35);
   }
-  .brand{display:flex;align-items:baseline;gap:8px}
-  .brand h1{font-size:clamp(19px,5.4vw,22px);font-weight:800;letter-spacing:-.02em}
+  .brand{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand-l{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .brand h1{font-size:clamp(19px,5.4vw,22px);font-weight:800;letter-spacing:-.02em;white-space:nowrap}
   .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;transform:translateY(-2px)}
+  .icon-btn{
+    width:38px;height:38px;flex:none;display:grid;place-items:center;
+    border:0;background:transparent;color:var(--muted);border-radius:11px;cursor:pointer;
+  }
+  .icon-btn:active{background:var(--line)}
+  .icon-btn svg{width:20px;height:20px}
   .date{color:var(--muted);font-size:13px;margin-top:2px}
   .progress{margin-top:13px;display:flex;align-items:center;gap:10px}
   .progress[hidden]{display:none}
@@ -107,7 +115,7 @@
     border:1px solid var(--line);
     border-radius:var(--radius);
     box-shadow:var(--shadow);
-    padding:13px 12px 13px 14px;
+    padding:12px 12px 12px 14px;
     display:flex;align-items:center;gap:10px;
     margin-bottom:9px;
   }
@@ -124,6 +132,10 @@
   .remain.soon{color:var(--amber)}
   .remain.urgent{color:var(--red)}
   .remain.over{color:var(--darkred)}
+  li.task .stakes-mini{
+    margin-top:3px;font-size:11.5px;color:var(--muted);opacity:.9;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
   .badge{
     display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;
     background:var(--over-line);color:var(--darkred);font-size:11px;font-weight:800;
@@ -136,6 +148,7 @@
   li.task.done.over,li.task.done.soon{background:var(--surface);border-color:var(--line)}
   li.task.done .title{text-decoration:line-through;text-decoration-thickness:2px}
   li.task.done .time{color:var(--muted)}
+  li.task.done .stakes-mini{display:none}
 
   .check{
     width:32px;height:32px;flex:none;border-radius:50%;
@@ -150,25 +163,19 @@
   li.task.done .check svg{opacity:1}
 
   .del{
-    flex:none;width:32px;height:34px;border:0;background:transparent;color:var(--muted);
-    font-size:16px;cursor:pointer;opacity:.45;border-radius:8px;
+    flex:none;min-width:32px;height:34px;border:0;background:transparent;color:var(--muted);
+    font-size:16px;cursor:pointer;opacity:.45;border-radius:8px;padding:0;
   }
   .del:hover{opacity:1;color:var(--darkred)}
-  .del.confirm{opacity:1;color:#fff;background:var(--darkred);font-size:11px;font-weight:800;width:auto;padding:0 9px}
+  .del.confirm{opacity:1;color:#fff;background:var(--darkred);font-size:11px;font-weight:800;padding:0 9px}
 
-  .empty{text-align:center;color:var(--muted);padding:56px 24px 40px}
+  .empty{text-align:center;color:var(--muted);padding:52px 24px 36px}
   .empty .big{font-size:40px;margin-bottom:10px}
   .empty p{font-size:14px}
-  .allclear{text-align:center;padding:24px 20px 6px;color:var(--accent-ink);font-weight:800;font-size:15px}
+  .allclear{text-align:center;padding:22px 20px 6px;color:var(--accent-ink);font-weight:800;font-size:15px}
 
-  .foot{text-align:center;padding:24px 20px 8px}
-  .linkbtn{
-    border:0;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;
-    font-weight:700;cursor:pointer;padding:6px 8px;border-radius:6px;
-  }
-  .linkbtn:active{color:var(--text)}
-  .foot .sep{color:var(--line)}
-  .foot .note{margin-top:6px;color:var(--muted);font-size:11px;opacity:.75}
+  .foot{text-align:center;padding:22px 20px 8px}
+  .foot .note{color:var(--muted);font-size:11px;opacity:.75}
 
   /* ---------- add bar — fixed, never scrolls ---------- */
   .addbar{
@@ -181,15 +188,17 @@
     border:1px solid var(--line);
     border-radius:16px;
     box-shadow:var(--shadow);
-    padding:8px;
-    display:flex;flex-direction:column;gap:8px;
+    padding:7px;
+    display:flex;flex-direction:column;gap:7px;
   }
-  .addbar .arow{display:flex;gap:8px}
+  .addbar .arow{display:flex;gap:7px}
   .addbar input{
     border:0;outline:0;font:inherit;font-size:16px;color:var(--text);
     background:var(--bg);border-radius:10px;
   }
   .addbar input[type=text]{background:transparent;padding:9px 10px;width:100%;min-width:0}
+  .addbar input.stakes-in{background:var(--bg);padding:9px 10px;width:100%}
+  .addbar input.stakes-in::placeholder{color:var(--darkred);opacity:.65}
   .addbar input[type=time]{flex:none;padding:9px 10px;font-weight:700;font-variant-numeric:tabular-nums}
   .addbar button{
     flex:1;border:0;background:var(--accent);color:#fff;font:inherit;font-weight:800;
@@ -199,10 +208,47 @@
   .addbar button:active{transform:scale(.98)}
   .addbar button:disabled{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line);transform:none}
 
+  /* ---------- history sheet ---------- */
+  .sheet{
+    position:fixed;inset:0;z-index:45;background:var(--bg);
+    display:flex;flex-direction:column;
+    transform:translateY(100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+  }
+  .sheet.open{transform:translateY(0)}
+  .sheet-head{
+    flex:none;display:flex;align-items:center;justify-content:space-between;
+    padding:calc(14px + env(safe-area-inset-top)) clamp(12px,4vw,18px) 8px clamp(16px,5vw,22px);
+  }
+  .sheet-head h2{font-size:18px;font-weight:800}
+  .sheet-sum{flex:none;padding:0 clamp(16px,5vw,22px) 10px;color:var(--muted);font-size:13px;font-weight:700}
+  .sheet-body{
+    flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    padding:2px clamp(12px,4vw,18px) calc(28px + env(safe-area-inset-bottom));
+  }
+  .day-group{margin-top:14px}
+  .day-h{
+    font-size:12px;font-weight:800;color:var(--muted);
+    position:sticky;top:0;background:var(--bg);padding:6px 2px;z-index:1;
+  }
+  .h-item{
+    display:flex;gap:10px;padding:10px 12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;margin-bottom:7px;
+  }
+  .h-item .h-time{font-weight:800;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);flex:none;min-width:44px}
+  .h-item .h-body{flex:1;min-width:0}
+  .h-item .h-title{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+  .h-item.failed .h-title{color:var(--darkred)}
+  .h-item .h-stakes{font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+  .h-pill{flex:none;align-self:flex-start;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .h-pill.done{background:var(--accent-tint);color:var(--accent-ink)}
+  .h-pill.failed{background:var(--over-line);color:var(--darkred)}
+  .sheet-empty{text-align:center;color:var(--muted);padding:70px 24px;font-size:14px}
+
   /* ---------- alarm overlay ---------- */
   .overlay{
     position:fixed;inset:0;z-index:50;
-    background:rgba(20,17,12,.84);
+    background:rgba(20,17,12,.85);
     -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
     display:none;
     flex-direction:column;align-items:center;justify-content:center;
@@ -212,16 +258,21 @@
   .overlay.show{display:flex}
   .overlay > *{flex-shrink:0}
   .overlay img{
-    max-width:min(74vw,300px);max-height:38vh;
+    max-width:min(72vw,290px);max-height:36vh;
     object-fit:contain;
     filter:drop-shadow(0 12px 30px rgba(0,0,0,.4));
     -webkit-user-drag:none;user-select:none;
   }
-  .overlay .kicker{color:#ffd9d9;font-size:13px;font-weight:800;letter-spacing:.06em;margin-top:20px}
+  .overlay .kicker{color:#ffd9d9;font-size:13px;font-weight:800;letter-spacing:.06em;margin-top:18px}
   .overlay .say{color:#fff;font-size:clamp(20px,6vw,24px);font-weight:800;line-height:1.35;margin-top:8px;max-width:20ch}
   .overlay .task-name{color:#c9c4b8;font-size:14px;margin-top:12px;max-width:26ch;overflow-wrap:anywhere}
   .overlay .task-name b{color:#fff}
-  .overlay .btns{display:flex;gap:10px;margin-top:24px;width:100%;max-width:320px}
+  .overlay .stakes{
+    margin-top:12px;color:#ffb4b4;font-size:14px;font-weight:700;line-height:1.4;
+    max-width:26ch;overflow-wrap:anywhere;
+  }
+  .overlay .stakes:empty{display:none}
+  .overlay .btns{display:flex;gap:10px;margin-top:22px;width:100%;max-width:320px}
   .overlay .btns button{
     flex:1;border:0;font:inherit;font-weight:800;font-size:15px;
     padding:14px 10px;border-radius:14px;cursor:pointer;
@@ -235,7 +286,7 @@
     position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));
     transform:translateX(-50%) translateY(20px);
     background:#1f1d1a;color:#fff;font-size:13px;font-weight:600;
-    padding:10px 16px;border-radius:99px;z-index:40;max-width:80vw;text-align:center;
+    padding:10px 16px;border-radius:99px;z-index:60;max-width:80vw;text-align:center;
     opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -249,7 +300,7 @@
       color-scheme:dark;
       --bg:#17150f;--surface:#221f18;--line:#332f26;
       --text:#f2efe6;--muted:#9a9384;
-      --accent:#41b45a;--accent-ink:#a7e3b4;
+      --accent:#41b45a;--accent-ink:#a7e3b4;--accent-tint:#1e3a26;
       --darkred:#ff9b9b;
       --over-bg:#2a1c17;--over-line:#4a2a24;--soon-bg:#272117;
     }
@@ -263,7 +314,14 @@
 <body>
 <div id="app">
   <header>
-    <div class="brand"><h1>좋됨감지앱</h1><span class="dot"></span></div>
+    <div class="brand">
+      <div class="brand-l"><h1>좋됨감지앱</h1><span class="dot"></span></div>
+      <button type="button" class="icon-btn" id="histbtn" aria-label="지난 일정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 2"/>
+        </svg>
+      </button>
+    </div>
     <div class="date" id="date"></div>
     <div class="progress">
       <div class="bar"><i id="barfill"></i></div>
@@ -278,13 +336,8 @@
       <div class="big">📝</div>
       <p>오늘 <b>반드시</b> 해야 할 일을 적어.</p>
     </div>
-
     <footer class="foot">
-      <button type="button" class="linkbtn" id="exportbtn">백업 내보내기</button>
-      <span class="sep">·</span>
-      <button type="button" class="linkbtn" id="importbtn">가져오기</button>
-      <input type="file" id="importfile" accept="application/json,.json" hidden>
-      <p class="note">모든 데이터는 이 기기 브라우저에만 저장됩니다.</p>
+      <p class="note">모든 일정과 기록은 이 기기에만 저장됩니다.</p>
     </footer>
   </main>
 
@@ -292,6 +345,8 @@
     <form id="addform" autocomplete="off">
       <input type="text" id="ititle" placeholder="반드시 해야 할 일" maxlength="60"
              required autocapitalize="off" autocomplete="off" spellcheck="false">
+      <input type="text" id="istakes" class="stakes-in" placeholder="안 하면 어떻게 되는데?" maxlength="80"
+             required autocapitalize="off" autocomplete="off" spellcheck="false" aria-label="못 했을 때 벌어지는 일">
       <div class="arow">
         <input type="time" id="itime" required aria-label="마감 시각">
         <button type="submit" id="addbtn">추가</button>
@@ -299,11 +354,23 @@
     </form>
   </div>
 
+  <section class="sheet" id="sheet" aria-hidden="true" aria-label="지난 일정">
+    <div class="sheet-head">
+      <h2>지난 일정</h2>
+      <button type="button" class="icon-btn" id="sheetclose" aria-label="닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-sum" id="sheetsum"></div>
+    <div class="sheet-body" id="sheetbody"></div>
+  </section>
+
   <div class="overlay" id="overlay" role="alertdialog" aria-modal="true">
     <img id="ov-img" alt="">
     <div class="kicker" id="ov-kicker"></div>
     <div class="say" id="ov-say"></div>
     <div class="task-name" id="ov-task"></div>
+    <div class="stakes" id="ov-stakes"></div>
     <div class="btns">
       <button class="later" id="ov-later">아직...</button>
       <button class="did" id="ov-did">했어</button>
@@ -317,80 +384,95 @@
 (function(){
   "use strict";
 
-  var STORE_KEY = "jotdoem.tasks.v1";
-  var THRESHOLDS = [60, 30, 10];                 // minutes before due
-  var PUNCH_INTERVAL_MS = 3 * 60 * 1000;         // repeat punch every 3 min while overdue
+  /* =========================================================================
+   *  푸시(앱 꺼도 오는 알림) 설정 — Cloudflare Worker 배포 후 아래 두 값을 채운다.
+   *  비워두면 푸시는 꺼지고, 앱이 열려 있을 때의 알람만 동작한다.
+   * ========================================================================= */
+  var PUSH_API = "";           // 예: "https://jotdoem-push.내계정.workers.dev"
+  var VAPID_PUBLIC_KEY = "";   // Worker의 genkeys가 출력한 공개키(base64url)
+
+  var STORE_KEY   = "jotdoem.tasks.v1";
+  var ARCHIVE_KEY = "jotdoem.archive.v1";
+  var ARCHIVE_MAX = 300;
+  var THRESHOLDS = [60, 30, 10];            // 마감 N분 전 알람
+  var PUNCH_INTERVAL_MS = 3 * 60 * 1000;    // 초과 시 주먹질 반복 간격(앱 내부)
   var TICK_MS = 15 * 1000;
 
-  var IMG = {
-    60: "worry.png",
-    30: "doubt.png",
-    10: "anxiety.png",
-    punch: "punch-2.png"
-  };
+  var IMG = { 60:"worry.png", 30:"doubt.png", 10:"anxiety.png", punch:"punch-2.png" };
   var SAY = {
-    60: { kicker: "1시간 전", say: "1시간 남았다. 이거 했어?" },
-    30: { kicker: "30분 전",  say: "30분 남았다. 진짜 하고 있어?" },
-    10: { kicker: "10분 전",  say: "10분 남았다. 너 안 했지?!" },
-    punch: { kicker: "마감 초과", say: "마감 지났다. 좋됐네." }
+    60: { kicker:"1시간 전", say:"1시간 남았다. 이거 했어?" },
+    30: { kicker:"30분 전",  say:"30분 남았다. 진짜 하고 있어?" },
+    10: { kicker:"10분 전",  say:"10분 남았다. 너 안 했지?!" },
+    punch: { kicker:"마감 초과", say:"마감 지났다. 좋됐네." }
   };
+  var DAYS = ["일","월","화","수","목","금","토"];
 
   // ---------- state ----------
-  var tasks = load();
+  var tasks = load(STORE_KEY);
+  var archive = load(ARCHIVE_KEY);
   var alarmQueue = [];
   var overlayOpen = false;
   var currentAlarm = null;
 
   var $ = function(id){ return document.getElementById(id); };
   var listEl = $("list"), emptyEl = $("empty"), allclearEl = $("allclear");
-  var overlay = $("overlay");
+  var overlay = $("overlay"), sheet = $("sheet");
 
   // ---------- persistence ----------
-  function load(){
+  function load(key){
     try{
-      var raw = localStorage.getItem(STORE_KEY);
-      if(!raw) return [];
-      var arr = JSON.parse(raw);
+      var arr = JSON.parse(localStorage.getItem(key) || "[]");
       return Array.isArray(arr) ? arr : [];
     }catch(e){ return []; }
   }
-  function save(){
-    try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){}
+  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){} }
+  function saveArchive(){
+    try{
+      if(archive.length > ARCHIVE_MAX) archive = archive.slice(archive.length - ARCHIVE_MAX);
+      localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archive));
+    }catch(e){}
   }
 
   // ---------- date helpers ----------
-  function startOfToday(){
-    var d = new Date(); d.setHours(0,0,0,0); return d.getTime();
-  }
-  function startOfDay(ts){
-    var d = new Date(ts); d.setHours(0,0,0,0); return d.getTime();
-  }
+  function startOfToday(){ var d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+  function startOfDay(ts){ var d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
   function daysOverdue(due){
     var diff = startOfToday() - startOfDay(due);
     return diff > 0 ? Math.round(diff / 86400000) : 0;
   }
-
-  // carry over: drop finished tasks from previous days, keep unfinished ones
-  function tidy(){
-    var today = startOfToday();
-    var before = tasks.length;
-    tasks = tasks.filter(function(t){
-      if(t.done && t.doneAt && t.doneAt < today) return false;
-      return true;
-    });
-    if(tasks.length !== before) save();
-  }
-
-  // ---------- rendering ----------
   function fmtDate(){
     var d = new Date();
-    var days = ["일","월","화","수","목","금","토"];
-    return d.getFullYear() + "년 " + (d.getMonth()+1) + "월 " + d.getDate() + "일 " + days[d.getDay()] + "요일";
+    return d.getFullYear() + "년 " + (d.getMonth()+1) + "월 " + d.getDate() + "일 " + DAYS[d.getDay()] + "요일";
+  }
+  function fmtDay(ts){
+    var d = new Date(ts), t = new Date(); t.setHours(0,0,0,0);
+    var diff = Math.round((t.getTime() - startOfDay(ts)) / 86400000);
+    var base = (d.getMonth()+1) + "월 " + d.getDate() + "일 (" + DAYS[d.getDay()] + ")";
+    if(diff === 0) return "오늘 · " + base;
+    if(diff === 1) return "어제 · " + base;
+    return d.getFullYear() + "년 " + base;
   }
   function fmtClock(ts){
     var d = new Date(ts);
     return ("0"+d.getHours()).slice(-2) + ":" + ("0"+d.getMinutes()).slice(-2);
   }
+
+  // ---------- carry-over / archiving ----------
+  function tidy(){
+    var today = startOfToday(), changed = false;
+    tasks = tasks.filter(function(t){
+      // 지난 날 완료분 → 기록으로 이동
+      if(t.done && t.doneAt && t.doneAt < today){
+        archive.push({ id:t.id, title:t.title, stakes:t.stakes||"", due:t.due, outcome:"done", closedAt:t.doneAt });
+        changed = true;
+        return false;
+      }
+      return true;   // 미완료는 계속 남아 다그침 (다음 날로 이월)
+    });
+    if(changed){ save(); saveArchive(); }
+  }
+
+  // ---------- rendering: main list ----------
   function remainInfo(t){
     if(t.done) return { text:"완료", cls:"" };
     var diff = t.due - Date.now();
@@ -405,11 +487,15 @@
     var h = Math.floor(min / 60), m = min % 60;
     return { text: h + "시간 " + (m ? m + "분 " : "") + "남음", cls:"" };
   }
-
   function sortTasks(){
     tasks.sort(function(a,b){
       if(a.done !== b.done) return a.done ? 1 : -1;
       return a.due - b.due;
+    });
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   }
 
@@ -425,6 +511,7 @@
 
       var r = remainInfo(t);
       var badge = (!t.done && r.over && r.days >= 1) ? '<span class="badge">이월</span>' : "";
+      var stakes = t.stakes ? escapeHtml(t.stakes) : "안 적음";
 
       li.className = "task"
         + (t.done ? " done" : "")
@@ -436,8 +523,9 @@
         '<div class="body">' +
           '<div class="title">' + escapeHtml(t.title) + '</div>' +
           '<span class="remain ' + r.cls + '">' + r.text + badge + '</span>' +
+          '<div class="stakes-mini">⚠ ' + stakes + '</div>' +
         '</div>' +
-        '<button class="del" aria-label="삭제">✕</button>' +
+        '<button class="del" aria-label="삭제 또는 실패 기록">✕</button>' +
         '<button class="check" aria-label="완료 표시">' +
           '<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>' +
         '</button>';
@@ -451,45 +539,89 @@
     emptyEl.hidden = total !== 0;
     document.querySelector(".progress").hidden = total === 0;
     allclearEl.hidden = !(total > 0 && doneCount === total);
-
     $("count").textContent = doneCount + " / " + total;
     $("barfill").style.width = (total ? (doneCount / total * 100) : 0) + "%";
   }
 
-  function escapeHtml(s){
-    return s.replace(/[&<>"']/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  // ---------- rendering: history sheet ----------
+  function renderHistory(){
+    var body = $("sheetbody");
+    body.innerHTML = "";
+    var total = archive.length;
+    var done = archive.reduce(function(n,a){ return n + (a.outcome === "done" ? 1 : 0); }, 0);
+    $("sheetsum").textContent = total
+      ? ("마감된 일정 " + total + "개 · 해냄 " + done + " (" + Math.round(done/total*100) + "%)")
+      : "";
+
+    if(!total){
+      body.innerHTML = '<div class="sheet-empty">아직 마감된 일정이 없어.<br>완료하거나 포기한 일이 여기 쌓인다.</div>';
+      return;
+    }
+
+    var sorted = archive.slice().sort(function(a,b){ return b.closedAt - a.closedAt; });
+    var groups = [], index = {};
+    sorted.forEach(function(a){
+      var key = startOfDay(a.closedAt);
+      if(!(key in index)){ index[key] = groups.length; groups.push({ key:key, items:[] }); }
+      groups[index[key]].items.push(a);
+    });
+
+    groups.forEach(function(g){
+      var wrap = document.createElement("div");
+      wrap.className = "day-group";
+      var h = '<div class="day-h">' + fmtDay(g.key) + '</div>';
+      g.items.sort(function(a,b){ return a.due - b.due; });
+      var rows = g.items.map(function(a){
+        var failed = a.outcome !== "done";
+        return '<div class="h-item' + (failed ? " failed" : "") + '">' +
+          '<span class="h-time">' + fmtClock(a.due) + '</span>' +
+          '<div class="h-body">' +
+            '<div class="h-title">' + escapeHtml(a.title) + '</div>' +
+            (a.stakes ? '<div class="h-stakes">' + (failed ? "→ " : "안 하면: ") + escapeHtml(a.stakes) + '</div>' : "") +
+          '</div>' +
+          '<span class="h-pill ' + (failed ? "failed" : "done") + '">' + (failed ? "못 함" : "해냄") + '</span>' +
+        '</div>';
+      }).join("");
+      wrap.innerHTML = h + rows;
+      body.appendChild(wrap);
     });
   }
 
-  // ---------- actions ----------
-  function newId(){
-    return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  function openSheet(){
+    renderHistory();
+    sheet.classList.add("open");
+    sheet.setAttribute("aria-hidden", "false");
   }
-  // thresholds already inside their window at creation time shouldn't fire retroactively
+  function closeSheet(){
+    sheet.classList.remove("open");
+    sheet.setAttribute("aria-hidden", "true");
+  }
+  $("histbtn").addEventListener("click", openSheet);
+  $("sheetclose").addEventListener("click", closeSheet);
+
+  // ---------- actions ----------
+  function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
   function firedFor(due){
     var now = Date.now(), f = {};
     THRESHOLDS.forEach(function(m){ if(due - now <= m * 60000) f[m] = true; });
     return f;
   }
 
-  function addTask(title, hhmm){
+  function addTask(title, stakes, hhmm){
     var parts = hhmm.split(":");
     var d = new Date();
     d.setHours(+parts[0], +parts[1], 0, 0);
     var due = d.getTime();
     tasks.push({
-      id: newId(),
-      title: title,
-      due: due,
-      done: false,
-      doneAt: null,
+      id: newId(), title: title, stakes: stakes, due: due,
+      done: false, doneAt: null,
       fired: firedFor(due),
-      lastPunch: due < Date.now() ? Date.now() : 0   // 3분 유예 후 첫 주먹질
+      lastPunch: due < Date.now() ? Date.now() : 0
     });
     save();
     render();
     ensureNotifyPermission();
+    syncPush();
   }
 
   function toggleDone(id){
@@ -499,16 +631,28 @@
     t.doneAt = t.done ? Date.now() : null;
     save();
     render();
-    // clear any pending alarms for a finished task
     alarmQueue = alarmQueue.filter(function(a){ return a.id !== id || !t.done; });
     if(t.done && currentAlarm && currentAlarm.id === id) closeOverlay();
+    syncPush();
   }
 
   function removeTask(id){
     tasks = tasks.filter(function(t){ return t.id !== id; });
-    save();
-    render();
+    save(); render();
     if(currentAlarm && currentAlarm.id === id) closeOverlay();
+    syncPush();
+  }
+
+  function giveUp(id){
+    var t = findTask(id);
+    if(!t) return;
+    archive.push({ id:t.id, title:t.title, stakes:t.stakes||"", due:t.due, outcome:"failed", closedAt:Date.now() });
+    saveArchive();
+    tasks = tasks.filter(function(x){ return x.id !== id; });
+    save(); render();
+    if(currentAlarm && currentAlarm.id === id) closeOverlay();
+    syncPush();
+    toast("못 한 걸로 기록했다.");
   }
 
   function findTask(id){
@@ -518,42 +662,35 @@
 
   function wireDelete(btn, id){
     var armed = false, timer;
+    function disarm(){ armed = false; clearTimeout(timer); btn.textContent = "✕"; btn.classList.remove("confirm"); }
     btn.addEventListener("click", function(e){
       e.stopPropagation();
-      if(armed){ removeTask(id); return; }
+      var t = findTask(id); if(!t) return;
+      var overdue = !t.done && (t.due - Date.now() <= 0);
+      if(armed){ disarm(); overdue ? giveUp(id) : removeTask(id); return; }
       armed = true;
-      btn.textContent = "삭제";
+      btn.textContent = overdue ? "못 했어" : "지우기";
       btn.classList.add("confirm");
       timer = setTimeout(disarm, 2500);
     });
-    function disarm(){
-      armed = false;
-      clearTimeout(timer);
-      btn.textContent = "✕";
-      btn.classList.remove("confirm");
-    }
     btn.addEventListener("blur", disarm);
   }
 
-  // ---------- alarm engine ----------
+  // ---------- alarm engine (앱이 열려 있을 때) ----------
   function checkAlarms(){
     var now = Date.now();
     tasks.forEach(function(t){
       if(t.done) return;
       if(!t.fired) t.fired = {};
       var diff = t.due - now;
-
       if(diff > 0){
-        var crossed = THRESHOLDS.filter(function(m){
-          return !t.fired[m] && diff <= m * 60000;
-        });
+        var crossed = THRESHOLDS.filter(function(m){ return !t.fired[m] && diff <= m * 60000; });
         if(crossed.length){
           crossed.forEach(function(m){ t.fired[m] = true; });
           save();
           enqueue(t, Math.min.apply(null, crossed));
         }
       } else {
-        // overdue & not done -> punch, repeating
         if(now - (t.lastPunch || 0) >= PUNCH_INTERVAL_MS){
           t.lastPunch = now;
           save();
@@ -564,14 +701,12 @@
   }
 
   function enqueue(task, kind){
-    // de-dupe identical pending alarm
     var dup = alarmQueue.some(function(a){ return a.id === task.id && a.kind === kind; });
     if(!dup && !(currentAlarm && currentAlarm.id === task.id && currentAlarm.kind === kind)){
-      alarmQueue.push({ id: task.id, kind: kind, title: task.title });
+      alarmQueue.push({ id:task.id, kind:kind, title:task.title, stakes:task.stakes || "" });
     }
     pump();
   }
-
   function pump(){
     if(overlayOpen || !alarmQueue.length) return;
     var a = alarmQueue.shift();
@@ -581,7 +716,6 @@
   }
 
   function showOverlay(a){
-    // 알람이 뜨면 키보드부터 내린다
     if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
     overlayOpen = true;
     currentAlarm = a;
@@ -590,11 +724,11 @@
     $("ov-kicker").textContent = conf.kicker;
     $("ov-say").textContent = conf.say;
     $("ov-task").innerHTML = "「<b>" + escapeHtml(a.title) + "</b>」";
+    $("ov-stakes").textContent = a.stakes ? "안 하면 → " + a.stakes : "";
     overlay.classList.add("show");
     beep(a.kind === "punch");
-    notify(conf.say, a.title);
+    if(!pushEnabled()) notify(conf.say, a.title);
   }
-
   function closeOverlay(){
     overlay.classList.remove("show");
     overlayOpen = false;
@@ -612,7 +746,9 @@
     if(wasPunch) toast("3분 뒤에 또 온다.");
   });
   document.addEventListener("keydown", function(e){
-    if(e.key === "Escape" && overlayOpen) $("ov-later").click();
+    if(e.key !== "Escape") return;
+    if(overlayOpen) $("ov-later").click();
+    else if(sheet.classList.contains("open")) closeSheet();
   });
 
   // ---------- beep ----------
@@ -636,11 +772,13 @@
     }catch(e){}
   }
 
-  // ---------- notifications ----------
+  // ---------- local notification (푸시 미설정 시 백그라운드 대비) ----------
   function ensureNotifyPermission(){
     try{
       if("Notification" in window && Notification.permission === "default"){
-        Notification.requestPermission();
+        Notification.requestPermission().then(function(p){
+          if(p === "granted"){ subscribePush().then(syncPush); }
+        });
       }
     }catch(e){}
   }
@@ -650,6 +788,72 @@
       if(!document.hidden) return;
       new Notification("좋됨감지앱 — " + title, { body: body, tag: "jotdoem" });
     }catch(e){}
+  }
+
+  // ---------- push: 앱을 꺼도 오는 알림 (Worker 설정 시) ----------
+  function pushEnabled(){
+    return !!PUSH_API && !!VAPID_PUBLIC_KEY &&
+           "serviceWorker" in navigator && "PushManager" in window &&
+           "Notification" in window && Notification.permission === "granted";
+  }
+  function urlB64ToU8(s){
+    var pad = "=".repeat((4 - s.length % 4) % 4);
+    var b64 = (s + pad).replace(/-/g, "+").replace(/_/g, "/");
+    var raw = atob(b64), arr = new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+  var pushSub = null;
+  function subscribePush(){
+    if(!pushEnabled()) return Promise.resolve(null);
+    return navigator.serviceWorker.ready.then(function(reg){
+      return reg.pushManager.getSubscription().then(function(sub){
+        if(sub) return sub;
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlB64ToU8(VAPID_PUBLIC_KEY)
+        });
+      });
+    }).then(function(sub){ pushSub = sub; return sub; }).catch(function(){ return null; });
+  }
+  function pushReminders(){
+    var now = Date.now(), out = [];
+    var PRE = [60, 30, 10];
+    var POST = [0, 15, 30, 45, 60, 90, 120];
+    tasks.forEach(function(t){
+      if(t.done) return;
+      var name = "「" + t.title + "」";
+      PRE.forEach(function(m){
+        var at = t.due - m * 60000;
+        if(at > now) out.push({ fireAt:at, title:name, body:"마감 " + m + "분 전. 했어?", tag:"t-" + t.id });
+      });
+      POST.forEach(function(k){
+        var at = t.due + k * 60000;
+        if(at > now) out.push({
+          fireAt: at, title: name,
+          body: k === 0 ? "마감 시간이야. 좋됐어?" : "마감 " + k + "분 지남. 아직도 안 했어?",
+          tag: "t-" + t.id
+        });
+      });
+    });
+    out.sort(function(a,b){ return a.fireAt - b.fireAt; });
+    return out.slice(0, 60);
+  }
+  var syncTimer = null;
+  function syncPush(){
+    if(!pushEnabled()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function(){
+      subscribePush().then(function(sub){
+        if(!sub) return;
+        fetch(PUSH_API.replace(/\/+$/, "") + "/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: sub.toJSON(), reminders: pushReminders() }),
+          keepalive: true
+        }).catch(function(){});
+      });
+    }, 1500);
   }
 
   // ---------- toast ----------
@@ -662,86 +866,28 @@
     toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2400);
   }
 
-  // ---------- form ----------
-  var form = $("addform"), ititle = $("ititle"), itime = $("itime"), addbtn = $("addbtn");
-  function syncBtn(){ addbtn.disabled = !(ititle.value.trim() && itime.value); }
+  // ---------- add form ----------
+  var form = $("addform"), ititle = $("ititle"), istakes = $("istakes"), itime = $("itime"), addbtn = $("addbtn");
+  function syncBtn(){ addbtn.disabled = !(ititle.value.trim() && istakes.value.trim() && itime.value); }
   ititle.addEventListener("input", syncBtn);
+  istakes.addEventListener("input", syncBtn);
   itime.addEventListener("input", syncBtn);
   form.addEventListener("submit", function(e){
     e.preventDefault();
-    var title = ititle.value.trim();
-    if(!title || !itime.value) return;
-    addTask(title, itime.value);
-    ititle.value = "";
+    var title = ititle.value.trim(), stakes = istakes.value.trim();
+    if(!title || !stakes || !itime.value) return;
+    addTask(title, stakes, itime.value);
+    ititle.value = ""; istakes.value = "";
     syncBtn();
     ititle.focus();
   });
-  // default time = next full hour
   (function(){
     var d = new Date(); d.setHours(d.getHours()+1, 0, 0, 0);
     itime.value = ("0"+d.getHours()).slice(-2) + ":" + ("0"+d.getMinutes()).slice(-2);
     syncBtn();
   })();
 
-  // ---------- backup: export / import ----------
-  $("exportbtn").addEventListener("click", function(){
-    var payload = {
-      app: "jotdoem",
-      schema: 1,
-      exportedAt: new Date().toISOString(),
-      tasks: tasks
-    };
-    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "좋됨감지-백업-" + new Date().toISOString().slice(0,10) + ".json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
-    toast("백업 파일을 저장했다.");
-  });
-
-  $("importbtn").addEventListener("click", function(){ $("importfile").click(); });
-  $("importfile").addEventListener("change", function(e){
-    var file = e.target.files && e.target.files[0];
-    e.target.value = "";
-    if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(){
-      var incoming;
-      try{
-        var data = JSON.parse(reader.result);
-        incoming = Array.isArray(data) ? data : data.tasks;
-      }catch(err){ incoming = null; }
-      if(!Array.isArray(incoming)){ toast("백업 파일을 읽지 못했다."); return; }
-
-      var clean = incoming.filter(function(t){
-        return t && typeof t.title === "string" && typeof t.due === "number";
-      }).map(function(t){
-        return {
-          id: t.id || newId(),
-          title: String(t.title).slice(0,60),
-          due: t.due,
-          done: !!t.done,
-          doneAt: t.doneAt || null,
-          fired: t.fired && typeof t.fired === "object" ? t.fired : firedFor(t.due),
-          lastPunch: t.lastPunch || (t.due < Date.now() ? Date.now() : 0)
-        };
-      });
-      if(!clean.length){ toast("가져올 일정이 없다."); return; }
-      if(!window.confirm(clean.length + "개 일정으로 현재 목록을 덮어쓴다. 계속?")) return;
-
-      tasks = clean;
-      save();
-      render();
-      checkAlarms();
-      toast("가져오기 완료.");
-    };
-    reader.readAsText(file);
-  });
-
-  // ---------- viewport: glue the app to the visible area (mobile keyboard safe) ----------
+  // ---------- viewport glue (mobile keyboard safe) ----------
   var appEl = $("app"), headerEl = document.querySelector("header"), mainEl = document.querySelector("main");
   var vv = window.visualViewport;
   function fitViewport(){
@@ -764,7 +910,6 @@
     ae.blur();
   }, true);
 
-  // ---------- shadow under the fixed header once the list scrolls ----------
   mainEl.addEventListener("scroll", function(){
     headerEl.classList.toggle("scrolled", mainEl.scrollTop > 2);
   }, { passive: true });
@@ -776,18 +921,18 @@
   checkAlarms();
   setInterval(function(){ tidy(); render(); checkAlarms(); }, TICK_MS);
   document.addEventListener("visibilitychange", function(){
-    if(!document.hidden){ render(); checkAlarms(); }
+    if(!document.hidden){ render(); checkAlarms(); syncPush(); }
   });
 
-  // midnight roll-over: re-tidy and refresh the date label
   setInterval(function(){
-    var shown = $("date").textContent;
     var fresh = fmtDate();
-    if(shown !== fresh){ $("date").textContent = fresh; tidy(); render(); }
+    if($("date").textContent !== fresh){ $("date").textContent = fresh; tidy(); render(); syncPush(); }
   }, 60 * 1000);
 
   if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js").catch(function(){});
+    navigator.serviceWorker.register("sw.js").then(function(){
+      if(pushEnabled()) subscribePush().then(syncPush);
+    }).catch(function(){});
   }
 })();
 </script>

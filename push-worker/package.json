@@ -1,0 +1,14 @@
+{
+  "name": "jotdoem-push",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "keys": "node genkeys.mjs",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "node test/roundtrip.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}
