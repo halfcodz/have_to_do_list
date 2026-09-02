@@ -1511,16 +1511,33 @@
           return arr;
         }
         var pushSub = null;
+        function sameKey(buf, want) {
+          if (!buf) return false;
+          var a = new Uint8Array(buf);
+          if (a.length !== want.length) return false;
+          for (var i = 0; i < a.length; i++) if (a[i] !== want[i]) return false;
+          return true;
+        }
         function subscribePush() {
           if (!pushEnabled()) return Promise.resolve(null);
+          var want = urlB64ToU8(VAPID_PUBLIC_KEY);
           return navigator.serviceWorker.ready
             .then(function (reg) {
               return reg.pushManager.getSubscription().then(function (sub) {
-                if (sub) return sub;
-                return reg.pushManager.subscribe({
-                  userVisibleOnly: true,
-                  applicationServerKey: urlB64ToU8(VAPID_PUBLIC_KEY),
-                });
+                // 기존 구독이 있어도 VAPID 키가 바뀌었으면 새로 구독
+                if (
+                  sub &&
+                  sameKey(sub.options && sub.options.applicationServerKey, want)
+                ) {
+                  return sub;
+                }
+                var fresh = function () {
+                  return reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: want,
+                  });
+                };
+                return sub ? sub.unsubscribe().then(fresh) : fresh();
               });
             })
             .then(function (sub) {
