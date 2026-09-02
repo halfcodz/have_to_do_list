@@ -3,7 +3,7 @@
  * - HTML / manifest : network-first  (배포 즉시 최신 반영, 오프라인이면 캐시)
  * - 이미지 / 아이콘 : cache-first    (빠르게, 없으면 네트워크)
  */
-var VERSION = "2026-09-02a";
+var VERSION = "2026-09-02b";
 var CACHE = "jotdoem-" + VERSION;
 
 var PRECACHE = [
