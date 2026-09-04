@@ -6,7 +6,18 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
-    <meta name="theme-color" content="#2f9e44" />
+    <!-- 상태바 / 다이나믹 아일랜드 영역을 앱 배경색과 동일하게 -->
+    <meta
+      name="theme-color"
+      content="#f4f1ea"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#17150f"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta name="theme-color" content="#f4f1ea" />
     <meta
       name="description"
       content="오늘 반드시 해야 할 일과 못 했을 때 벌어지는 일을 적는 have-to-do 리스트."
@@ -106,6 +117,76 @@
         background: var(--bg);
       }
 
+      /* ---------- update banner ---------- */
+      .updatebar {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: calc(env(safe-area-inset-top) + 10px) clamp(14px, 5vw, 20px)
+          10px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 13.5px;
+        font-weight: 700;
+      }
+      .updatebar[hidden] {
+        display: none;
+      }
+      .updatebar button {
+        flex: none;
+        border: 0;
+        background: rgba(255, 255, 255, 0.22);
+        color: #fff;
+        font: inherit;
+        font-weight: 800;
+        font-size: 13px;
+        padding: 7px 14px;
+        border-radius: 99px;
+        cursor: pointer;
+      }
+      .updatebar button:active {
+        transform: scale(0.96);
+      }
+
+      /* ---------- pull-to-refresh indicator ---------- */
+      .ptr {
+        position: absolute;
+        top: calc(env(safe-area-inset-top) + 4px);
+        left: 50%;
+        width: 34px;
+        height: 34px;
+        margin-left: -17px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        color: var(--muted);
+        opacity: 0;
+        transform: translateY(-52px);
+        pointer-events: none;
+        z-index: 4;
+      }
+      .ptr svg {
+        width: 18px;
+        height: 18px;
+        transition: transform 0.2s;
+      }
+      .ptr.ready svg {
+        transform: rotate(-180deg);
+      }
+      .ptr.spin svg {
+        animation: ptrspin 0.8s linear infinite;
+        transform: none;
+      }
+      @keyframes ptrspin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
       /* ---------- header — fixed, never scrolls ---------- */
       header {
         flex: none;
@@ -121,6 +202,10 @@
       header.scrolled {
         border-bottom-color: var(--line);
         box-shadow: 0 8px 18px -12px rgba(30, 25, 15, 0.35);
+      }
+      /* 업데이트 배너가 떠 있으면 상태바 여백은 배너가 담당 */
+      #app:has(.updatebar:not([hidden])) header {
+        padding-top: 13px;
       }
       .brand {
         display: flex;
@@ -873,6 +958,23 @@
   </head>
   <body>
     <div id="app">
+      <div class="updatebar" id="updatebar" hidden>
+        <span>새 버전이 나왔어</span>
+        <button type="button" id="updatebtn">업데이트</button>
+      </div>
+      <div class="ptr" id="ptr" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 12a9 9 0 1 1-3-6.7" />
+          <path d="M21 3v6h-6" />
+        </svg>
+      </div>
       <header>
         <div class="brand">
           <div class="brand-l">
@@ -2204,16 +2306,170 @@
           }
         }, 60 * 1000);
 
-        refreshPushUI();
+        // ---------- service worker + 업데이트 흐름 ----------
+        var swReg = null;
+        var swUpdating = false;
+        var hadController =
+          "serviceWorker" in navigator &&
+          !!navigator.serviceWorker.controller;
+
+        function showUpdateBar() {
+          $("updatebar").hidden = false;
+        }
+        function applyUpdate() {
+          if (swReg && swReg.waiting) {
+            swUpdating = true;
+            swReg.waiting.postMessage({ type: "SKIP_WAITING" });
+            // controllerchange 에서 새로고침. 혹시 안 오면 대비:
+            setTimeout(function () {
+              if (swUpdating) location.reload();
+            }, 2500);
+          } else {
+            location.reload();
+          }
+        }
+        $("updatebtn").addEventListener("click", applyUpdate);
+
+        function watchInstalling(sw) {
+          if (!sw) return;
+          sw.addEventListener("statechange", function () {
+            if (
+              sw.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
+              showUpdateBar();
+            }
+          });
+        }
+
+        var swReloaded = false;
         if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.addEventListener(
+            "controllerchange",
+            function () {
+              if (!hadController) return; // 최초 설치는 새로고침 안 함
+              if (swReloaded) return;
+              swReloaded = true;
+              location.reload();
+            },
+          );
+
           navigator.serviceWorker
             .register("sw.js")
-            .then(function () {
+            .then(function (reg) {
+              swReg = reg;
               refreshPushUI();
-              if (pushEnabled()) subscribePush().then(syncPush).then(refreshPushUI);
+              if (pushEnabled())
+                subscribePush().then(syncPush).then(refreshPushUI);
+
+              if (reg.waiting && navigator.serviceWorker.controller)
+                showUpdateBar();
+              watchInstalling(reg.installing);
+              reg.addEventListener("updatefound", function () {
+                watchInstalling(reg.installing);
+              });
+
+              // 주기적으로 새 버전 확인
+              setInterval(
+                function () {
+                  reg.update().catch(function () {});
+                },
+                60 * 60 * 1000,
+              );
             })
             .catch(function () {});
+
+          document.addEventListener("visibilitychange", function () {
+            if (!document.hidden && swReg) swReg.update().catch(function () {});
+          });
         }
+
+        // ---------- 위에서 아래로 당겨 새로고침 ----------
+        (function pullToRefresh() {
+          var ptrEl = $("ptr");
+          var startY = 0,
+            active = false,
+            dist = 0,
+            busy = false;
+          var THRESH = 66;
+
+          function reset(animate) {
+            ptrEl.style.transition = animate ? "transform .25s, opacity .25s" : "";
+            ptrEl.style.transform = "translateY(-52px)";
+            ptrEl.style.opacity = "0";
+            ptrEl.classList.remove("ready");
+            setTimeout(function () {
+              ptrEl.style.transition = "";
+              ptrEl.classList.remove("spin");
+            }, 260);
+          }
+
+          function refreshNow() {
+            var reload = function () {
+              location.reload();
+            };
+            if (swReg) {
+              swUpdating = true;
+              swReg
+                .update()
+                .then(function () {
+                  if (swReg.waiting) applyUpdate();
+                  else reload();
+                })
+                .catch(reload);
+              setTimeout(reload, 3500);
+            } else {
+              reload();
+            }
+          }
+
+          mainEl.addEventListener(
+            "touchstart",
+            function (e) {
+              if (busy || e.touches.length !== 1) return;
+              if (mainEl.scrollTop <= 0) {
+                startY = e.touches[0].clientY;
+                active = true;
+                dist = 0;
+              }
+            },
+            { passive: true },
+          );
+
+          mainEl.addEventListener(
+            "touchmove",
+            function (e) {
+              if (!active) return;
+              var dy = e.touches[0].clientY - startY;
+              if (dy <= 0 || mainEl.scrollTop > 0) {
+                active = false;
+                reset(true);
+                return;
+              }
+              dist = Math.min(dy * 0.5, 96);
+              ptrEl.style.opacity = "1";
+              ptrEl.style.transform = "translateY(" + (dist - 4) + "px)";
+              ptrEl.classList.toggle("ready", dist >= THRESH);
+              if (e.cancelable) e.preventDefault();
+            },
+            { passive: false },
+          );
+
+          mainEl.addEventListener("touchend", function () {
+            if (!active) return;
+            active = false;
+            if (dist >= THRESH && !busy) {
+              busy = true;
+              ptrEl.style.transition = "transform .2s";
+              ptrEl.style.transform = "translateY(" + (THRESH - 4) + "px)";
+              ptrEl.classList.remove("ready");
+              ptrEl.classList.add("spin");
+              refreshNow();
+            } else {
+              reset(true);
+            }
+          });
+        })();
       })();
     </script>
   </body>

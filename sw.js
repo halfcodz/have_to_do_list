@@ -4,7 +4,7 @@
  * - 이미지 / 아이콘 : cache-first    (빠르게, 없으면 네트워크)
  * - push           : Cloudflare Worker가 보낸 알림 표시
  */
-var VERSION = "2026-09-04a";
+var VERSION = "2026-09-04b";
 var CACHE = "jotdoem-" + VERSION;
 
 var PRECACHE = [
@@ -21,12 +21,16 @@ var PRECACHE = [
   "./assets/apple-touch-icon.png"
 ];
 
+// 새 SW는 곧바로 활성화하지 않고 대기한다. 페이지가 "업데이트" 버튼으로 승인하면
+// SKIP_WAITING 메시지를 받아 활성화 → controllerchange → 페이지가 새로고침.
 self.addEventListener("install", function(e){
   e.waitUntil(
-    caches.open(CACHE)
-      .then(function(c){ return c.addAll(PRECACHE); })
-      .then(function(){ return self.skipWaiting(); })
+    caches.open(CACHE).then(function(c){ return c.addAll(PRECACHE); })
   );
+});
+
+self.addEventListener("message", function(e){
+  if(e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", function(e){
