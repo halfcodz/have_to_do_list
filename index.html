@@ -529,12 +529,15 @@
         min-width: 0;
       }
       li.task .title {
-        font-size: 15px;
+        font-family: var(--hand);
+        font-size: 20px;
         font-weight: 700;
+        line-height: 1.15;
         display: flex;
         align-items: center;
         gap: 6px;
         min-width: 0;
+        color: var(--text);
       }
       li.task .title .ttxt {
         overflow: hidden;
@@ -1030,8 +1033,10 @@
         min-width: 0;
       }
       .h-item .h-title {
-        font-size: 14px;
+        font-family: var(--hand);
+        font-size: 18px;
         font-weight: 700;
+        color: var(--text);
         overflow-wrap: anywhere;
         position: relative;
         display: inline-block;
@@ -1443,7 +1448,7 @@
       <header>
         <div class="brand">
           <div class="brand-l">
-            <h1>좋됨감지</h1>
+            <h1>좋됨감지앱</h1>
             <span class="dot"></span>
           </div>
           <div class="brand-actions">
@@ -1541,7 +1546,7 @@
               type="text"
               id="istakes"
               class="stakes-in"
-              placeholder="예: 가산세 20만원"
+              placeholder=""
               maxlength="80"
               required
               autocapitalize="off"
@@ -1552,7 +1557,7 @@
           </div>
           <div class="arow">
             <input type="time" id="itime" required aria-label="마감 시각" />
-            <button type="submit" id="addbtn">적는다</button>
+            <button type="submit" id="addbtn">OK</button>
           </div>
         </form>
       </div>
@@ -2485,7 +2490,7 @@
               Notification.requestPermission().then(function (p) {
                 refreshPushUI();
                 if (p === "granted") {
-                  subscribePush().then(syncPush).then(refreshPushUI);
+                  subscribePush().then(syncPushNow).then(refreshPushUI);
                 }
               });
             }
@@ -2600,23 +2605,44 @@
           return out.slice(0, 80);
         }
         var syncTimer = null;
+        // 실제로 서버에 예약을 올리는 부분. sendBeacon이 있으면 그걸 우선 써서
+        // 앱이 백그라운드로 가거나 완전히 닫히는 순간에도 최대한 전송되게 한다.
+        function postSync(sub) {
+          if (!sub) return;
+          var url = PUSH_API.replace(/\/+$/, "") + "/sync";
+          var payload = JSON.stringify({
+            subscription: sub.toJSON(),
+            reminders: pushReminders(),
+          });
+          try {
+            if (navigator.sendBeacon) {
+              // text/plain으로 보내면 프리플라이트 없이 그대로 전송됨(내용은 JSON 그대로)
+              var ok = navigator.sendBeacon(
+                url,
+                new Blob([payload], { type: "text/plain" }),
+              );
+              if (ok) return;
+            }
+          } catch (e) {}
+          fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+            keepalive: true,
+          }).catch(function () {});
+        }
+        // 디바운스 없이 지금 즉시 동기화 (구독이 아직 없으면 먼저 구독)
+        function syncPushNow() {
+          if (!pushEnabled()) return;
+          clearTimeout(syncTimer);
+          if (pushSub) postSync(pushSub);
+          else subscribePush().then(postSync);
+        }
+        // 연속으로 여러 번 바뀔 때(칩 여러 개 클릭 등) 마지막 것만 보내는 디바운스 버전
         function syncPush() {
           if (!pushEnabled()) return;
           clearTimeout(syncTimer);
-          syncTimer = setTimeout(function () {
-            subscribePush().then(function (sub) {
-              if (!sub) return;
-              fetch(PUSH_API.replace(/\/+$/, "") + "/sync", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  subscription: sub.toJSON(),
-                  reminders: pushReminders(),
-                }),
-                keepalive: true,
-              }).catch(function () {});
-            });
-          }, 1500);
+          syncTimer = setTimeout(syncPushNow, 600);
         }
 
         // ---------- push 상태 표시 + 테스트 버튼 (아이폰 디버깅용) ----------
@@ -2740,6 +2766,24 @@
         });
         fitViewport();
 
+        // 키보드가 열리고 닫히는 애니메이션 도중엔 visualViewport 값이
+        // 몇 차례 더 바뀌므로, 포커스가 오갈 때마다 한동안 반복 재측정한다.
+        // (iOS에서 resize/scroll 이벤트 타이밍이 어긋나 addbar가 키보드
+        //  위에 정확히 붙지 않고 붕 뜨는 문제를 막기 위함)
+        function scheduleFitBursts() {
+          [0, 50, 100, 180, 260, 360, 480, 620, 800, 1000].forEach(function (
+            ms,
+          ) {
+            setTimeout(fitViewport, ms);
+          });
+        }
+        document.addEventListener("focusin", function (e) {
+          if (e.target && e.target.tagName === "INPUT") scheduleFitBursts();
+        });
+        document.addEventListener("focusout", function (e) {
+          if (e.target && e.target.tagName === "INPUT") scheduleFitBursts();
+        });
+
         // ---------- tap outside an input dismisses the keyboard ----------
         document.addEventListener(
           "pointerdown",
@@ -2778,9 +2822,16 @@
           if (!document.hidden) {
             render();
             checkAlarms();
-            syncPush();
+            syncPushNow();
             refreshPushUI();
+          } else {
+            // 백그라운드로 가는 그 순간 서버 예약을 확실히 최신으로 남겨둔다
+            syncPushNow();
           }
+        });
+        // 앱이 완전히 닫히는 경우까지 대비한 마지막 저지선
+        window.addEventListener("pagehide", function () {
+          syncPushNow();
         });
 
         setInterval(function () {
@@ -2789,9 +2840,12 @@
             $("date").textContent = fresh;
             tidy();
             render();
-            syncPush();
+            syncPushNow();
           }
         }, 60 * 1000);
+
+        // 놓친 동기화를 스스로 복구하는 안전망 (2분마다 최신 예약을 다시 올림)
+        setInterval(syncPushNow, 2 * 60 * 1000);
 
         // ---------- service worker + 업데이트 흐름 ----------
         var swReg = null;
@@ -2847,7 +2901,7 @@
               swReg = reg;
               refreshPushUI();
               if (pushEnabled())
-                subscribePush().then(syncPush).then(refreshPushUI);
+                subscribePush().then(syncPushNow).then(refreshPushUI);
 
               if (reg.waiting && navigator.serviceWorker.controller)
                 showUpdateBar();
