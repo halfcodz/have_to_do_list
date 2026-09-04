@@ -968,6 +968,136 @@
         font-size: 18px;
         color: var(--muted2);
       }
+
+      /* ---------- 지난 일정 달력 ---------- */
+      .cal {
+        flex: none;
+        padding: 6px clamp(16px, 5vw, 22px) 8px;
+      }
+      .cal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .cal-title {
+        font-family: var(--hand);
+        font-size: 21px;
+        font-weight: 700;
+      }
+      .cal-nav {
+        width: 32px;
+        height: 32px;
+        flex: none;
+        border: 2.2px solid var(--ink);
+        border-radius: 50%;
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--hand);
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: transform 0.16s;
+      }
+      .cal-nav:active {
+        transform: scale(0.88);
+      }
+      .cal-dow {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-family: var(--hand);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--muted2);
+        margin-bottom: 2px;
+      }
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px 0;
+      }
+      .cal-day {
+        position: relative;
+        aspect-ratio: 1;
+        border: 0;
+        background: transparent;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        cursor: pointer;
+        margin: 0 auto;
+        width: 36px;
+      }
+      .cal-day.pad {
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .cal-day .cal-num {
+        font-family: var(--hand);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .cal-day.today {
+        background: var(--yellow);
+      }
+      .cal-day.selected {
+        border: 2.2px solid var(--ink);
+        background: var(--surface);
+        box-shadow: var(--sticker-sm);
+      }
+      .cal-day.today.selected {
+        background: var(--yellow);
+      }
+      .cal-dots {
+        display: flex;
+        gap: 3px;
+        height: 5px;
+      }
+      .cal-dots .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+      }
+      .dot.ok {
+        background: var(--accent);
+      }
+      .dot.no {
+        background: var(--red);
+      }
+      .day-h.sel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .cal-clear {
+        flex: none;
+        border: 2px dashed var(--line2);
+        background: transparent;
+        color: var(--muted);
+        font-family: var(--hand);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 99px;
+        cursor: pointer;
+      }
+      .cal-clear:active {
+        transform: scale(0.95);
+      }
+      .sheet-empty.small {
+        padding: 24px 10px;
+        font-size: 15px;
+      }
       .sheet-body {
         flex: 1;
         min-height: 0;
@@ -1591,6 +1721,22 @@
           </button>
         </div>
         <div class="sheet-sum" id="sheetsum"></div>
+        <div class="cal">
+          <div class="cal-head">
+            <button type="button" class="cal-nav" id="cal-prev" aria-label="이전 달">
+              ‹
+            </button>
+            <div class="cal-title" id="cal-title"></div>
+            <button type="button" class="cal-nav" id="cal-next" aria-label="다음 달">
+              ›
+            </button>
+          </div>
+          <div class="cal-dow">
+            <span>일</span><span>월</span><span>화</span><span>수</span
+            ><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
         <div class="sheet-body" id="sheetbody"></div>
       </section>
 
@@ -1849,6 +1995,10 @@
         function startOfToday() {
           return startOfDay(Date.now());
         }
+        // 달력에서 특정 연/월(0-based)/일의 KST 자정(epoch ms)
+        function kstDayStart(y, mo, d) {
+          return Date.UTC(y, mo, d, 0, 0, 0) - KST_MS;
+        }
         function daysOverdue(due) {
           var diff = startOfToday() - startOfDay(due);
           return diff > 0 ? Math.round(diff / 86400000) : 0;
@@ -2004,29 +2154,134 @@
         }
 
         // ---------- rendering: history sheet ----------
-        function renderHistory() {
+        function rowHtml(a) {
+          var failed = a.outcome !== "done";
+          return (
+            '<div class="h-item' +
+            (failed ? " failed" : "") +
+            '">' +
+            '<span class="h-time">' +
+            fmtClock(a.due) +
+            "</span>" +
+            '<div class="h-body">' +
+            '<div class="h-title">' +
+            escapeHtml(a.title) +
+            "</div>" +
+            (a.stakes
+              ? '<div class="h-stakes">' +
+                (failed ? "→ " : "안 하면: ") +
+                escapeHtml(a.stakes) +
+                "</div>"
+              : "") +
+            "</div>" +
+            '<span class="h-pill ' +
+            (failed ? "failed" : "done") +
+            '">' +
+            (failed ? "못 함" : "해냄") +
+            "</span>" +
+            "</div>"
+          );
+        }
+
+        // ---------- 지난 일정 달력 ----------
+        var calY, calMo, calSelected;
+        (function () {
+          var p = kstParts();
+          calY = p.y;
+          calMo = p.mo;
+          calSelected = null;
+        })();
+        function archiveByDay() {
+          var map = {};
+          archive.forEach(function (a) {
+            var key = startOfDay(a.closedAt);
+            if (!map[key]) map[key] = { done: 0, failed: 0 };
+            if (a.outcome === "done") map[key].done++;
+            else map[key].failed++;
+          });
+          return map;
+        }
+        function renderCalendar() {
+          var byDay = archiveByDay();
+          var todayKey = startOfToday();
+          var first = new Date(calY, calMo, 1);
+          var startPad = first.getDay();
+          var numDays = new Date(calY, calMo + 1, 0).getDate();
+
+          $("cal-title").textContent = calY + "년 " + (calMo + 1) + "월";
+
+          var html = "";
+          for (var i = 0; i < startPad; i++)
+            html += '<span class="cal-day pad"></span>';
+          for (var d = 1; d <= numDays; d++) {
+            var key = kstDayStart(calY, calMo, d);
+            var info = byDay[key];
+            var cls =
+              "cal-day" +
+              (key === todayKey ? " today" : "") +
+              (info ? " has" : "") +
+              (calSelected === key ? " selected" : "");
+            var dots = info
+              ? (info.done ? '<i class="dot ok"></i>' : "") +
+                (info.failed ? '<i class="dot no"></i>' : "")
+              : "";
+            html +=
+              '<button type="button" class="' +
+              cls +
+              '" data-key="' +
+              key +
+              '"><span class="cal-num">' +
+              d +
+              '</span><span class="cal-dots">' +
+              dots +
+              "</span></button>";
+          }
+          var grid = $("cal-grid");
+          grid.innerHTML = html;
+          grid.querySelectorAll(".cal-day:not(.pad)").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var k = Number(btn.dataset.key);
+              calSelected = calSelected === k ? null : k;
+              renderCalendar();
+              renderHistoryList();
+            });
+          });
+        }
+
+        function renderHistoryList() {
           var body = $("sheetbody");
           body.innerHTML = "";
-          var total = archive.length;
-          var done = archive.reduce(function (n, a) {
-            return n + (a.outcome === "done" ? 1 : 0);
-          }, 0);
-          $("sheetsum").innerHTML = total
-            ? '<div class="sheet-sum-card">' +
-              '<div class="counts"><span class="ok">해냄 ' +
-              done +
-              '</span><span class="no">못 함 ' +
-              (total - done) +
-              "</span></div>" +
-              '<div class="pct">' +
-              Math.round((done / total) * 100) +
-              "<i>%</i></div>" +
-              "</div>"
-            : "";
 
-          if (!total) {
+          if (!archive.length) {
             body.innerHTML =
               '<div class="sheet-empty">아직 마감된 일정이 없어.<br>완료하거나 포기한 일이 여기 쌓인다.</div>';
+            return;
+          }
+
+          if (calSelected !== null) {
+            var items = archive.filter(function (a) {
+              return startOfDay(a.closedAt) === calSelected;
+            });
+            items.sort(function (a, b) {
+              return a.due - b.due;
+            });
+            var wrap = document.createElement("div");
+            wrap.className = "day-group";
+            var head =
+              '<div class="day-h sel-head"><span>' +
+              fmtDay(calSelected) +
+              '</span><button type="button" class="cal-clear" id="cal-clear">전체 보기</button></div>';
+            wrap.innerHTML =
+              head +
+              (items.length
+                ? items.map(rowHtml).join("")
+                : '<div class="sheet-empty small">이 날은 기록이 없어.</div>');
+            body.appendChild(wrap);
+            $("cal-clear").addEventListener("click", function () {
+              calSelected = null;
+              renderCalendar();
+              renderHistoryList();
+            });
             return;
           }
 
@@ -2043,50 +2298,67 @@
             }
             groups[index[key]].items.push(a);
           });
-
           groups.forEach(function (g) {
             var wrap = document.createElement("div");
             wrap.className = "day-group";
-            var h = '<div class="day-h">' + fmtDay(g.key) + "</div>";
             g.items.sort(function (a, b) {
               return a.due - b.due;
             });
-            var rows = g.items
-              .map(function (a) {
-                var failed = a.outcome !== "done";
-                return (
-                  '<div class="h-item' +
-                  (failed ? " failed" : "") +
-                  '">' +
-                  '<span class="h-time">' +
-                  fmtClock(a.due) +
-                  "</span>" +
-                  '<div class="h-body">' +
-                  '<div class="h-title">' +
-                  escapeHtml(a.title) +
-                  "</div>" +
-                  (a.stakes
-                    ? '<div class="h-stakes">' +
-                      (failed ? "→ " : "안 하면: ") +
-                      escapeHtml(a.stakes) +
-                      "</div>"
-                    : "") +
-                  "</div>" +
-                  '<span class="h-pill ' +
-                  (failed ? "failed" : "done") +
-                  '">' +
-                  (failed ? "못 함" : "해냄") +
-                  "</span>" +
-                  "</div>"
-                );
-              })
-              .join("");
-            wrap.innerHTML = h + rows;
+            wrap.innerHTML =
+              '<div class="day-h">' +
+              fmtDay(g.key) +
+              "</div>" +
+              g.items.map(rowHtml).join("");
             body.appendChild(wrap);
           });
         }
 
+        function renderHistory() {
+          var total = archive.length;
+          var done = archive.reduce(function (n, a) {
+            return n + (a.outcome === "done" ? 1 : 0);
+          }, 0);
+          $("sheetsum").innerHTML = total
+            ? '<div class="sheet-sum-card">' +
+              '<div class="counts"><span class="ok">해냄 ' +
+              done +
+              '</span><span class="no">못 함 ' +
+              (total - done) +
+              "</span></div>" +
+              '<div class="pct">' +
+              Math.round((done / total) * 100) +
+              "<i>%</i></div>" +
+              "</div>"
+            : "";
+          renderCalendar();
+          renderHistoryList();
+        }
+        $("cal-prev").addEventListener("click", function () {
+          calMo--;
+          if (calMo < 0) {
+            calMo = 11;
+            calY--;
+          }
+          calSelected = null;
+          renderCalendar();
+          renderHistoryList();
+        });
+        $("cal-next").addEventListener("click", function () {
+          calMo++;
+          if (calMo > 11) {
+            calMo = 0;
+            calY++;
+          }
+          calSelected = null;
+          renderCalendar();
+          renderHistoryList();
+        });
+
         function openSheet() {
+          var p = kstParts();
+          calY = p.y;
+          calMo = p.mo;
+          calSelected = null;
           renderHistory();
           settingsEl.classList.remove("open");
           sheet.classList.add("open");
