@@ -167,6 +167,11 @@
         width: 20px;
         height: 20px;
       }
+      .brand-actions {
+        display: flex;
+        gap: 2px;
+        flex: none;
+      }
       .date {
         color: var(--muted);
         font-size: 13px;
@@ -592,6 +597,119 @@
         font-size: 14px;
       }
 
+      /* ---------- settings ---------- */
+      .set-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 2px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      .set-label b {
+        font-size: 15px;
+      }
+      .set-label p {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .toggle {
+        flex: none;
+        width: 50px;
+        height: 30px;
+        border-radius: 99px;
+        border: 0;
+        background: var(--line);
+        padding: 3px;
+        cursor: pointer;
+        transition: background 0.18s;
+      }
+      .toggle > span {
+        display: block;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        transition: transform 0.18s;
+      }
+      .toggle[aria-checked="true"] {
+        background: var(--accent);
+      }
+      .toggle[aria-checked="true"] > span {
+        transform: translateX(20px);
+      }
+      .set-block {
+        padding-top: 6px;
+        transition: opacity 0.18s;
+      }
+      .set-block.off {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+      .set-block h3 {
+        font-size: 12.5px;
+        font-weight: 800;
+        color: var(--muted);
+        margin: 20px 2px 10px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      #set-post-times {
+        margin-top: 9px;
+      }
+      .chip {
+        border: 1.5px solid var(--line);
+        background: var(--surface);
+        color: var(--muted);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 13px;
+        border-radius: 99px;
+        cursor: pointer;
+      }
+      .chip.on {
+        border-color: var(--accent);
+        background: var(--accent-tint);
+        color: var(--accent-ink);
+      }
+      .chip:active {
+        transform: scale(0.96);
+      }
+      .custom-add {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .custom-add input {
+        flex: 1;
+        min-width: 0;
+        border: 1.5px solid var(--line);
+        background: var(--surface);
+        border-radius: 10px;
+        font: inherit;
+        font-size: 16px;
+        padding: 8px 12px;
+        color: var(--text);
+      }
+      .custom-add button {
+        flex: none;
+        border: 0;
+        background: var(--accent);
+        color: #fff;
+        font: inherit;
+        font-weight: 800;
+        font-size: 14px;
+        padding: 0 16px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
       /* ---------- alarm overlay ---------- */
       .overlay {
         position: fixed;
@@ -761,25 +879,49 @@
             <h1>좋됨감지앱</h1>
             <span class="dot"></span>
           </div>
-          <button
-            type="button"
-            class="icon-btn"
-            id="histbtn"
-            aria-label="지난 일정"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="brand-actions">
+            <button
+              type="button"
+              class="icon-btn"
+              id="setbtn"
+              aria-label="알림 설정"
             >
-              <path d="M3 3v5h5" />
-              <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
-              <path d="M12 7v5l3 2" />
-            </svg>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="icon-btn"
+              id="histbtn"
+              aria-label="지난 일정"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 3v5h5" />
+                <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="date" id="date"></div>
         <div class="progress">
@@ -865,6 +1007,70 @@
         <div class="sheet-body" id="sheetbody"></div>
       </section>
 
+      <section
+        class="sheet"
+        id="settings"
+        aria-hidden="true"
+        aria-label="알림 설정"
+      >
+        <div class="sheet-head">
+          <h2>알림 설정</h2>
+          <button
+            type="button"
+            class="icon-btn"
+            id="setclose"
+            aria-label="닫기"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+        <div class="sheet-body">
+          <div class="set-row">
+            <div class="set-label">
+              <b>알림 받기</b>
+              <p>끄면 어떤 알림도 오지 않아</p>
+            </div>
+            <button
+              type="button"
+              class="toggle"
+              id="set-enabled"
+              role="switch"
+              aria-checked="true"
+            >
+              <span></span>
+            </button>
+          </div>
+
+          <div class="set-block" id="set-detail">
+            <h3>마감 전에 알림</h3>
+            <div class="chips" id="set-pre"></div>
+            <div class="custom-add">
+              <input
+                type="number"
+                id="set-custom"
+                inputmode="numeric"
+                min="1"
+                max="1440"
+                placeholder="직접 (분 전)"
+              />
+              <button type="button" id="set-custom-add">추가</button>
+            </div>
+
+            <h3>마감 넘기면 반복</h3>
+            <div class="chips" id="set-post-every"></div>
+            <div class="chips" id="set-post-times"></div>
+          </div>
+        </div>
+      </section>
+
       <div class="overlay" id="overlay" role="alertdialog" aria-modal="true">
         <img id="ov-img" alt="" />
         <div class="kicker" id="ov-kicker"></div>
@@ -894,24 +1100,103 @@
 
         var STORE_KEY = "jotdoem.tasks.v1";
         var ARCHIVE_KEY = "jotdoem.archive.v1";
+        var ALARMCFG_KEY = "jotdoem.alarmcfg.v1";
         var ARCHIVE_MAX = 300;
-        var THRESHOLDS = [60, 30, 10]; // 마감 N분 전 알람
-        var PUNCH_INTERVAL_MS = 3 * 60 * 1000; // 초과 시 주먹질 반복 간격(앱 내부)
         var TICK_MS = 15 * 1000;
 
-        var IMG = {
-          60: "worry.png",
-          30: "doubt.png",
-          10: "anxiety.png",
-          punch: "punch-2.png",
+        // 사용자가 고를 수 있는 마감 전 알림 시점(분). 0 = 마감 시각
+        var PRE_PRESETS = [
+          { m: 60, label: "1시간 전" },
+          { m: 30, label: "30분 전" },
+          { m: 10, label: "10분 전" },
+          { m: 5, label: "5분 전" },
+          { m: 1, label: "1분 전" },
+          { m: 0, label: "마감 시각" },
+        ];
+        var POST_EVERY = [
+          { v: 0, label: "안 함" },
+          { v: 10, label: "10분마다" },
+          { v: 30, label: "30분마다" },
+          { v: 60, label: "1시간마다" },
+        ];
+        var POST_TIMES = [
+          { v: 1, label: "1번" },
+          { v: 3, label: "3번" },
+          { v: 5, label: "5번" },
+          { v: 10, label: "10번" },
+        ];
+        var ALARM_DEFAULT = {
+          enabled: true,
+          pre: [60, 30, 10, 0],
+          post: { every: 30, times: 3 },
         };
-        var SAY = {
-          60: { kicker: "1시간 전", say: "1시간 남았다. 이거 했어?" },
-          30: { kicker: "30분 전", say: "30분 남았다. 진짜 하고 있어?" },
-          10: { kicker: "10분 전", say: "10분 남았다. 너 안 했지?!" },
-          punch: { kicker: "마감 초과", say: "마감 지났다. 좋됐네." },
-        };
+
         var DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+        // ---------- alarm config ----------
+        var alarmCfg = loadAlarmCfg();
+        function loadAlarmCfg() {
+          try {
+            var c = JSON.parse(localStorage.getItem(ALARMCFG_KEY));
+            if (!c || typeof c !== "object") return clone(ALARM_DEFAULT);
+            return {
+              enabled: c.enabled !== false,
+              pre: Array.isArray(c.pre)
+                ? c.pre
+                    .map(Number)
+                    .filter(function (n) {
+                      return n >= 0 && n <= 1440;
+                    })
+                    .sort(function (a, b) {
+                      return b - a;
+                    })
+                : clone(ALARM_DEFAULT.pre),
+              post: {
+                every:
+                  c.post && c.post.every >= 0 ? Number(c.post.every) : 30,
+                times:
+                  c.post && c.post.times >= 1 ? Number(c.post.times) : 3,
+              },
+            };
+          } catch (e) {
+            return clone(ALARM_DEFAULT);
+          }
+        }
+        function clone(o) {
+          return JSON.parse(JSON.stringify(o));
+        }
+        function saveAlarmCfg() {
+          try {
+            localStorage.setItem(ALARMCFG_KEY, JSON.stringify(alarmCfg));
+          } catch (e) {}
+        }
+
+        // 남은 시간 문구 (lead: 분. 양수=마감 전, 0=마감, 음수=마감 후)
+        function humanDur(mins) {
+          var m = Math.abs(Math.round(mins));
+          if (m < 60) return m + "분";
+          var h = Math.floor(m / 60),
+            r = m % 60;
+          return h + "시간" + (r ? " " + r + "분" : "");
+        }
+        function leadTimeText(lead) {
+          if (lead === 0) return "마감 시각";
+          if (lead > 0) return "약 " + humanDur(lead) + " 남음";
+          return "마감 " + humanDur(lead) + " 지남";
+        }
+        function imgForLead(lead) {
+          if (lead < 0) return "punch-2.png";
+          if (lead <= 10) return "anxiety.png";
+          if (lead <= 30) return "doubt.png";
+          return "worry.png";
+        }
+        // 앱 안 오버레이용 개구리 한마디 (시간은 kicker가 따로 보여줌)
+        function sayForLead(lead) {
+          if (lead < 0) return "좋됐네. 마감 지났잖아.";
+          if (lead === 0) return "지금 마감이야. 했어?";
+          if (lead <= 10) return "너 이거 안 했지?";
+          return "이거 했어?";
+        }
 
         // ---------- state ----------
         var tasks = load(STORE_KEY);
@@ -1215,6 +1500,7 @@
 
         function openSheet() {
           renderHistory();
+          settingsEl.classList.remove("open");
           sheet.classList.add("open");
           sheet.setAttribute("aria-hidden", "false");
         }
@@ -1225,17 +1511,139 @@
         $("histbtn").addEventListener("click", openSheet);
         $("sheetclose").addEventListener("click", closeSheet);
 
+        // ---------- settings sheet ----------
+        var settingsEl = $("settings");
+        function chipRow(host, items, isOn, onPick) {
+          host.innerHTML = "";
+          items.forEach(function (it) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "chip" + (isOn(it) ? " on" : "");
+            b.textContent = it.label;
+            b.addEventListener("click", function () {
+              onPick(it);
+            });
+            host.appendChild(b);
+          });
+        }
+        function renderSettings() {
+          var on = alarmCfg.enabled;
+          $("set-enabled").setAttribute("aria-checked", on ? "true" : "false");
+          $("set-detail").classList.toggle("off", !on);
+
+          // 마감 전 알림: 프리셋 + 사용자가 추가한 커스텀 값
+          var customs = alarmCfg.pre.filter(function (m) {
+            return !PRE_PRESETS.some(function (p) {
+              return p.m === m;
+            });
+          });
+          var preItems = PRE_PRESETS.concat(
+            customs.map(function (m) {
+              return { m: m, label: m + "분 전", custom: true };
+            }),
+          );
+          chipRow(
+            $("set-pre"),
+            preItems,
+            function (it) {
+              return alarmCfg.pre.indexOf(it.m) !== -1;
+            },
+            function (it) {
+              var i = alarmCfg.pre.indexOf(it.m);
+              if (i === -1) alarmCfg.pre.push(it.m);
+              else alarmCfg.pre.splice(i, 1);
+              alarmCfg.pre.sort(function (a, b) {
+                return b - a;
+              });
+              commitAlarmCfg();
+            },
+          );
+
+          chipRow(
+            $("set-post-every"),
+            POST_EVERY,
+            function (it) {
+              return alarmCfg.post.every === it.v;
+            },
+            function (it) {
+              alarmCfg.post.every = it.v;
+              commitAlarmCfg();
+            },
+          );
+          chipRow(
+            $("set-post-times"),
+            POST_TIMES,
+            function (it) {
+              return alarmCfg.post.times === it.v;
+            },
+            function (it) {
+              alarmCfg.post.times = it.v;
+              commitAlarmCfg();
+            },
+          );
+          $("set-post-times").style.display =
+            alarmCfg.post.every > 0 ? "flex" : "none";
+        }
+        function commitAlarmCfg() {
+          saveAlarmCfg();
+          renderSettings();
+          // 설정이 바뀌면 발동 상태를 재계산하고 서버 예약도 갱신
+          var now = Date.now();
+          tasks.forEach(function (t) {
+            if (t.done) return;
+            t.fired = firedFor(t.due);
+            t.punchCount = 0;
+            t.lastPunch = t.due < now ? now : 0;
+          });
+          save();
+          checkAlarms();
+          syncPush();
+        }
+        $("set-enabled").addEventListener("click", function () {
+          alarmCfg.enabled = !alarmCfg.enabled;
+          commitAlarmCfg();
+          toast(alarmCfg.enabled ? "알림 켬" : "알림 껐어");
+        });
+        $("set-custom-add").addEventListener("click", function () {
+          var v = parseInt($("set-custom").value, 10);
+          if (!(v >= 1 && v <= 1440)) {
+            toast("1~1440 사이 분을 입력해줘");
+            return;
+          }
+          if (alarmCfg.pre.indexOf(v) === -1) {
+            alarmCfg.pre.push(v);
+            alarmCfg.pre.sort(function (a, b) {
+              return b - a;
+            });
+            commitAlarmCfg();
+          }
+          $("set-custom").value = "";
+        });
+        function openSettings() {
+          renderSettings();
+          sheet.classList.remove("open");
+          settingsEl.classList.add("open");
+          settingsEl.setAttribute("aria-hidden", "false");
+        }
+        function closeSettings() {
+          settingsEl.classList.remove("open");
+          settingsEl.setAttribute("aria-hidden", "true");
+        }
+        $("setbtn").addEventListener("click", openSettings);
+        $("setclose").addEventListener("click", closeSettings);
+
         // ---------- actions ----------
         function newId() {
           return (
             Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
           );
         }
+        // 추가/설정변경 시점에 이미 지난 알림 시점은 소급 발동하지 않도록 표시
         function firedFor(due) {
           var now = Date.now(),
             f = {};
-          THRESHOLDS.forEach(function (m) {
-            if (due - now <= m * 60000) f[m] = true;
+          alarmCfg.pre.forEach(function (m) {
+            if (m > 0 ? due - now <= m * 60000 : due <= now) f["p" + m] = true;
           });
           return f;
         }
@@ -1252,6 +1660,7 @@
             doneAt: null,
             fired: firedFor(due),
             lastPunch: due < Date.now() ? Date.now() : 0,
+            punchCount: 0,
           });
           save();
           render();
@@ -1340,47 +1749,58 @@
 
         // ---------- alarm engine (앱이 열려 있을 때) ----------
         function checkAlarms() {
+          if (!alarmCfg.enabled) return;
           var now = Date.now();
           tasks.forEach(function (t) {
             if (t.done) return;
             if (!t.fired) t.fired = {};
             var diff = t.due - now;
-            if (diff > 0) {
-              var crossed = THRESHOLDS.filter(function (m) {
-                return !t.fired[m] && diff <= m * 60000;
+
+            // 마감 전 알림 + 마감 시각 알림
+            var pending = alarmCfg.pre.filter(function (m) {
+              if (t.fired["p" + m]) return false;
+              return m > 0 ? diff > 0 && diff <= m * 60000 : diff <= 0;
+            });
+            if (pending.length) {
+              pending.forEach(function (m) {
+                t.fired["p" + m] = true;
               });
-              if (crossed.length) {
-                crossed.forEach(function (m) {
-                  t.fired[m] = true;
-                });
-                save();
-                enqueue(t, Math.min.apply(null, crossed));
-              }
-            } else {
-              if (now - (t.lastPunch || 0) >= PUNCH_INTERVAL_MS) {
+              save();
+              enqueue(t, Math.min.apply(null, pending)); // 가장 임박한 것만 표시
+            }
+
+            // 마감 후 반복
+            if (diff <= 0 && alarmCfg.post.every > 0) {
+              t.punchCount = t.punchCount || 0;
+              var base = t.lastPunch || t.due;
+              if (
+                t.punchCount < alarmCfg.post.times &&
+                now - base >= alarmCfg.post.every * 60000
+              ) {
                 t.lastPunch = now;
+                t.punchCount++;
                 save();
-                enqueue(t, "punch");
+                enqueue(t, -Math.round((now - t.due) / 60000));
               }
             }
           });
         }
 
-        function enqueue(task, kind) {
+        function enqueue(task, lead) {
           var dup = alarmQueue.some(function (a) {
-            return a.id === task.id && a.kind === kind;
+            return a.id === task.id && a.lead === lead;
           });
           if (
             !dup &&
             !(
               currentAlarm &&
               currentAlarm.id === task.id &&
-              currentAlarm.kind === kind
+              currentAlarm.lead === lead
             )
           ) {
             alarmQueue.push({
               id: task.id,
-              kind: kind,
+              lead: lead,
               title: task.title,
               stakes: task.stakes || "",
             });
@@ -1403,15 +1823,19 @@
             document.activeElement.blur();
           overlayOpen = true;
           currentAlarm = a;
-          var conf = SAY[a.kind];
-          $("ov-img").src = IMG[a.kind];
-          $("ov-kicker").textContent = conf.kicker;
-          $("ov-say").textContent = conf.say;
+          // 표시되는 남은시간은 지금 이 순간 기준 실제값
+          var t = findTask(a.id);
+          var realLead = t
+            ? Math.round((t.due - Date.now()) / 60000)
+            : a.lead;
+          $("ov-img").src = imgForLead(a.lead);
+          $("ov-kicker").textContent = leadTimeText(realLead);
+          $("ov-say").textContent = sayForLead(a.lead);
           $("ov-task").innerHTML = "「<b>" + escapeHtml(a.title) + "</b>」";
           $("ov-stakes").textContent = a.stakes ? "안 하면 → " + a.stakes : "";
           overlay.classList.add("show");
-          beep(a.kind === "punch");
-          if (!pushEnabled()) notify(conf.say, a.title);
+          beep(a.lead < 0);
+          if (!pushEnabled()) notify(leadTimeText(realLead), a.title);
         }
         function closeOverlay() {
           overlay.classList.remove("show");
@@ -1425,14 +1849,16 @@
           closeOverlay();
         });
         $("ov-later").addEventListener("click", function () {
-          var wasPunch = currentAlarm && currentAlarm.kind === "punch";
+          var wasOverdue = currentAlarm && currentAlarm.lead < 0;
           closeOverlay();
-          if (wasPunch) toast("3분 뒤에 또 온다.");
+          if (wasOverdue && alarmCfg.post.every > 0)
+            toast(alarmCfg.post.every + "분 뒤에 또 온다.");
         });
         document.addEventListener("keydown", function (e) {
           if (e.key !== "Escape") return;
           if (overlayOpen) $("ov-later").click();
           else if (sheet.classList.contains("open")) closeSheet();
+          else if (settingsEl.classList.contains("open")) closeSettings();
         });
 
         // ---------- beep ----------
@@ -1548,42 +1974,41 @@
               return null;
             });
         }
+        // 알림 본문: 제목(title) + 남은시간 + "안 하면" 문구. 잔소리 없이 정보만.
+        function reminderBody(lead, stakes) {
+          var b = "⏰ " + leadTimeText(lead);
+          if (stakes) b += "\n⚠️ 안 하면: " + stakes;
+          return b;
+        }
         function pushReminders() {
+          if (!alarmCfg.enabled) return [];
           var now = Date.now(),
             out = [];
-          var PRE = [60, 30, 10];
-          var POST = [0, 15, 30, 45, 60, 90, 120];
           tasks.forEach(function (t) {
             if (t.done) return;
-            var name = "「" + t.title + "」";
-            PRE.forEach(function (m) {
-              var at = t.due - m * 60000;
+            var push1 = function (at, lead) {
               if (at > now)
                 out.push({
                   fireAt: at,
-                  title: name,
-                  body: "마감 " + m + "분 전. 했어?",
+                  title: t.title,
+                  body: reminderBody(lead, t.stakes),
                   tag: "t-" + t.id,
                 });
+            };
+            alarmCfg.pre.forEach(function (m) {
+              push1(t.due - m * 60000, m);
             });
-            POST.forEach(function (k) {
-              var at = t.due + k * 60000;
-              if (at > now)
-                out.push({
-                  fireAt: at,
-                  title: name,
-                  body:
-                    k === 0
-                      ? "마감 시간이야. 좋됐어?"
-                      : "마감 " + k + "분 지남. 아직도 안 했어?",
-                  tag: "t-" + t.id,
-                });
-            });
+            if (alarmCfg.post.every > 0) {
+              for (var i = 1; i <= alarmCfg.post.times; i++) {
+                var mins = alarmCfg.post.every * i;
+                push1(t.due + mins * 60000, -mins);
+              }
+            }
           });
           out.sort(function (a, b) {
             return a.fireAt - b.fireAt;
           });
-          return out.slice(0, 60);
+          return out.slice(0, 80);
         }
         var syncTimer = null;
         function syncPush() {
