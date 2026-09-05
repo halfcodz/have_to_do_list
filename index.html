@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <!-- 상태바 / 다이나믹 아일랜드 영역을 앱 배경색과 동일하게 (항상 라이트 고정) -->
     <meta name="theme-color" content="#fbf7ee" />
@@ -76,6 +76,7 @@
       html {
         height: 100%;
         -webkit-text-size-adjust: 100%;
+        touch-action: manipulation;
       }
       body {
         height: 100%;
@@ -89,6 +90,21 @@
         -webkit-font-smoothing: antialiased;
         -webkit-tap-highlight-color: transparent;
         line-height: 1.45;
+        touch-action: manipulation;
+        /* 앱처럼: 길게 눌러도 텍스트 선택/콜아웃 메뉴/드래그가 안 뜨게 */
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      img {
+        -webkit-user-drag: none;
+        -webkit-touch-callout: none;
+      }
+      input,
+      textarea {
+        -webkit-user-select: text;
+        user-select: text;
+        -webkit-touch-callout: default;
       }
       button,
       input {
@@ -1646,9 +1662,49 @@
       }
 
       /* 시스템이 다크모드여도 앱은 항상 라이트 테마로 고정 (요청에 따라 다크 팔레트 비활성화) */
+
+      /* ---------- 가로 회전 막기 ---------- */
+      .landscape-block {
+        display: none;
+      }
+      @media screen and (orientation: landscape) {
+        #app,
+        .sheet,
+        .overlay,
+        .toast {
+          display: none !important;
+        }
+        .landscape-block {
+          display: flex;
+          position: fixed;
+          inset: 0;
+          z-index: 999;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: var(--bg);
+          text-align: center;
+          padding: 24px;
+        }
+        .landscape-block .big {
+          font-size: 44px;
+          animation: k-wob 1.6s ease-in-out infinite;
+        }
+        .landscape-block p {
+          font-family: var(--hand);
+          font-size: 22px;
+          font-weight: 700;
+          color: var(--text);
+        }
+      }
     </style>
   </head>
   <body>
+    <div class="landscape-block" aria-hidden="true">
+      <div class="big">🐸</div>
+      <p>세로로 돌려서 사용해줘</p>
+    </div>
     <div id="app">
       <div class="updatebar" id="updatebar" hidden>
         <span>새 버전이 나왔어</span>
@@ -3350,6 +3406,13 @@
           },
           { passive: true },
         );
+
+        // 세로 고정 (지원하는 브라우저/설치된 앱에서만 동작, 안 되면 조용히 무시)
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("portrait").catch(function () {});
+          }
+        } catch (e) {}
 
         // ---------- boot ----------
         $("date").textContent = fmtDate();
