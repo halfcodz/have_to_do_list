@@ -4,8 +4,9 @@
  * - 이미지 / 아이콘 : cache-first    (빠르게, 없으면 네트워크)
  * - push           : Cloudflare Worker가 보낸 알림 표시
  */
-var VERSION = "2026-09-05e";
+var VERSION = "2026-09-05f";
 var CACHE = "jotdoem-" + VERSION;
+var FONT_CACHE = "jotdoem-fonts-v1"; // 앱 버전과 무관하게 유지 — 새로고침마다 폰트가 늦게 바뀌며 화면이 흔들리는 것 방지
 
 var PRECACHE = [
   "./",
@@ -37,7 +38,7 @@ self.addEventListener("activate", function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
       return Promise.all(keys.map(function(k){
-        if(k !== CACHE) return caches.delete(k);
+        if(k !== CACHE && k !== FONT_CACHE) return caches.delete(k);
       }));
     }).then(function(){ return self.clients.claim(); })
   );
@@ -55,6 +56,22 @@ self.addEventListener("fetch", function(e){
   if(req.method !== "GET") return;
 
   var url = new URL(req.url);
+
+  // 구글 폰트: 한 번 받으면 계속 캐시로 즉시 서빙 (버전 캐시와 별개로 오래 유지)
+  if(url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com"){
+    e.respondWith(
+      caches.match(req).then(function(hit){
+        if(hit) return hit;
+        return fetch(req).then(function(res){
+          var copy = res.clone();
+          caches.open(FONT_CACHE).then(function(c){ c.put(req, copy); }).catch(function(){});
+          return res;
+        }).catch(function(){ return hit; });
+      })
+    );
+    return;
+  }
+
   if(url.origin !== self.location.origin) return;
 
   if(isHtmlish(req, url)){

@@ -33,7 +33,7 @@
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gothic+A1:wght@400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gothic+A1:wght@400;500;600;700;800;900&display=optional"
       rel="stylesheet"
     />
     <style>
@@ -2306,8 +2306,20 @@
           });
         }
 
+        var lastRenderSig = null;
         function render() {
           sortTasks();
+          // 순서/완료상태가 똑같으면(=시간 텍스트만 바뀌는 주기적 갱신) 카드
+          // 등장 애니메이션을 다시 재생하지 않는다 — 몇 초마다 리스트 전체가
+          // 들썩이는 것처럼 보이던 잡버그를 없앤다.
+          var sig = tasks
+            .map(function (t) {
+              return t.id + (t.done ? "1" : "0");
+            })
+            .join(",");
+          var replay = sig !== lastRenderSig;
+          lastRenderSig = sig;
+
           listEl.innerHTML = "";
           var doneCount = 0;
 
@@ -2329,6 +2341,7 @@
                 : "";
 
             li.className = "task" + (t.done ? " done" : "") + hiClass + soonClass;
+            if (!replay) li.style.animation = "none";
 
             li.innerHTML =
               '<span class="time-wrap"><span class="time-hi"></span><span class="time-txt">' +
@@ -2351,7 +2364,11 @@
               "</div>" +
               '<button class="del" aria-label="삭제 또는 실패 기록">✕</button>' +
               '<button class="check" aria-label="완료 표시">' +
-              '<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>' +
+              '<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"' +
+              (!replay && t.done
+                ? ' style="animation:none;stroke-dashoffset:0"'
+                : "") +
+              "/></svg>" +
               "</button>";
 
             li.querySelector(".check").addEventListener("click", function () {
