@@ -6,17 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
-    <!-- 상태바 / 다이나믹 아일랜드 영역을 앱 배경색과 동일하게 -->
-    <meta
-      name="theme-color"
-      content="#fbf7ee"
-      media="(prefers-color-scheme: light)"
-    />
-    <meta
-      name="theme-color"
-      content="#1b1712"
-      media="(prefers-color-scheme: dark)"
-    />
+    <!-- 상태바 / 다이나믹 아일랜드 영역을 앱 배경색과 동일하게 (항상 라이트 고정) -->
     <meta name="theme-color" content="#fbf7ee" />
     <meta
       name="description"
@@ -473,6 +463,10 @@
         transform: rotate(var(--r));
         animation: k-jelly 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
         transition: transform 0.22s cubic-bezier(0.2, 1.6, 0.4, 1);
+        cursor: pointer;
+      }
+      li.task:active {
+        transform: rotate(var(--r)) scale(0.985);
       }
       li.task:nth-child(4n + 1) {
         --r: -0.7deg;
@@ -884,11 +878,128 @@
         transform: none;
       }
 
+      /* ---------- 할 일 수정 시트 (입력바와 같은 생김새) ---------- */
+      .edit-card {
+        padding: 8px clamp(16px, 5vw, 22px) 24px;
+      }
+      .edit-card form {
+        background: var(--surface);
+        border: 3px solid var(--ink);
+        border-radius: 250px 18px 230px 18px / 18px 230px 18px 250px;
+        box-shadow: var(--shadow);
+        padding: 9px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .edit-card input {
+        border: 0;
+        outline: 0;
+        font: inherit;
+        color: var(--text);
+        background: transparent;
+        border-radius: 10px;
+      }
+      .edit-card input#edit-title {
+        font-family: var(--hand);
+        font-size: 21px;
+        font-weight: 700;
+        padding: 7px 10px;
+        width: 100%;
+        min-width: 0;
+      }
+      .edit-card .stakes-row {
+        border-top: 2.2px dashed var(--line);
+        padding: 7px 10px 5px;
+      }
+      .edit-card .stakes-row .lbl {
+        font-family: var(--hand);
+        font-size: 16px;
+        color: var(--muted2);
+        line-height: 1;
+      }
+      .edit-card input.stakes-in {
+        display: block;
+        font-family: var(--hand);
+        font-size: 21px;
+        font-weight: 700;
+        color: var(--red);
+        padding: 2px 0 0;
+        width: 100%;
+      }
+      .edit-card .arow {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+        margin-top: 6px;
+      }
+      .edit-card input[type="time"] {
+        flex: none;
+        border: 2.4px solid var(--ink);
+        background: var(--surface);
+        padding: 7px 11px;
+        font-family: var(--hand);
+        font-size: 22px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        border-radius: 12px;
+      }
+      .edit-card button[type="submit"] {
+        flex: 1;
+        min-width: 0;
+        border: 2.6px solid var(--ink);
+        background: var(--accent);
+        color: #fff;
+        font-family: var(--hand);
+        font-weight: 700;
+        font-size: 24px;
+        white-space: nowrap;
+        padding: 7px 12px;
+        border-radius: 14px;
+        cursor: pointer;
+        box-shadow: var(--sticker);
+        transition:
+          transform 0.16s,
+          box-shadow 0.16s;
+      }
+      .edit-card button[type="submit"]:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 var(--ink);
+      }
+      .edit-card button[type="submit"]:disabled {
+        background: transparent;
+        color: var(--muted2);
+        border: 2.6px dashed var(--line2);
+        box-shadow: none;
+        transform: none;
+      }
+      .edit-danger {
+        display: block;
+        width: 100%;
+        margin-top: 18px;
+        border: 2px dashed var(--over-line);
+        background: transparent;
+        color: var(--darkred);
+        font-family: var(--hand);
+        font-size: 18px;
+        font-weight: 700;
+        padding: 11px;
+        border-radius: 16px;
+        cursor: pointer;
+      }
+      .edit-danger:active {
+        transform: scale(0.98);
+      }
+
       /* ---------- history sheet ---------- */
       .sheet {
         position: fixed;
         inset: 0;
         z-index: 45;
+        max-width: 480px;
+        margin-inline: auto;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
         background: var(--bg);
         background-image: linear-gradient(var(--paperline) 1px, transparent 1px);
         background-size: 100% 28px;
@@ -1369,6 +1480,8 @@
         position: fixed;
         inset: 0;
         z-index: 50;
+        max-width: 480px;
+        margin-inline: auto;
         background: #26211c;
         background-image: radial-gradient(
           circle at 50% 36%,
@@ -1379,7 +1492,9 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 24px 24px calc(24px + env(safe-area-inset-bottom));
+        padding: 24px calc(24px + env(safe-area-inset-right))
+          calc(24px + env(safe-area-inset-bottom))
+          calc(24px + env(safe-area-inset-left));
         text-align: center;
         overflow-y: auto;
         font-family: var(--body-font);
@@ -1498,9 +1613,12 @@
       /* ---------- toast ---------- */
       .toast {
         position: fixed;
-        left: 50%;
+        left: max(0px, calc((100vw - 480px) / 2));
+        right: max(0px, calc((100vw - 480px) / 2));
+        margin: 0 auto;
+        width: fit-content;
         bottom: calc(96px + env(safe-area-inset-bottom));
-        transform: translateX(-50%) translateY(20px);
+        transform: translateY(20px);
         background: #1f1d1a;
         color: #fff;
         font-size: 13px;
@@ -1518,7 +1636,7 @@
       }
       .toast.show {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1527,33 +1645,7 @@
         }
       }
 
-      @media (prefers-color-scheme: dark) {
-        :root {
-          color-scheme: dark;
-          --bg: #1b1712;
-          --surface: #241f18;
-          --ink: #f0ead9;
-          --line: #3a3226;
-          --line2: #5a5140;
-          --text: #f2ebda;
-          --muted: #a89a80;
-          --muted2: #7d715c;
-          --accent: #6fc46f;
-          --accent-ink: #bdeec0;
-          --accent-tint: #203524;
-          --yellow: #ffe14d;
-          --amber: #e0a83e;
-          --red: #ff6b52;
-          --darkred: #ff9678;
-          --over-bg: #3a2018;
-          --over-line: #ff6b52;
-          --soon-bg: #2e2814;
-          --paperline: rgba(255, 240, 210, 0.045);
-        }
-        header.scrolled {
-          box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.6);
-        }
-      }
+      /* 시스템이 다크모드여도 앱은 항상 라이트 테마로 고정 (요청에 따라 다크 팔레트 비활성화) */
     </style>
   </head>
   <body>
@@ -1691,10 +1783,11 @@
           </div>
         </form>
       </div>
+    </div>
 
-      <section
-        class="sheet"
-        id="sheet"
+    <section
+      class="sheet"
+      id="sheet"
         aria-hidden="true"
         aria-label="지난 일정"
       >
@@ -1808,6 +1901,77 @@
         </div>
       </section>
 
+      <section
+        class="sheet"
+        id="editsheet"
+        aria-hidden="true"
+        aria-label="할 일 수정"
+      >
+        <div class="sheet-head">
+          <div class="sheet-title">
+            <h2>할 일 수정</h2>
+            <span class="u"></span>
+          </div>
+          <button
+            type="button"
+            class="icon-btn"
+            id="editclose"
+            aria-label="닫기"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+        <div class="sheet-body">
+          <div class="edit-card">
+            <form id="editform" autocomplete="off">
+              <input
+                type="text"
+                id="edit-title"
+                maxlength="60"
+                required
+                autocapitalize="off"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <div class="stakes-row">
+                <div class="lbl">안 하면 생기는 일</div>
+                <input
+                  type="text"
+                  id="edit-stakes"
+                  class="stakes-in"
+                  maxlength="80"
+                  required
+                  autocapitalize="off"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-label="못 했을 때 벌어지는 일"
+                />
+              </div>
+              <div class="arow">
+                <input
+                  type="time"
+                  id="edit-time"
+                  required
+                  aria-label="마감 시각"
+                />
+                <button type="submit" id="editsave">저장</button>
+              </div>
+            </form>
+            <button type="button" class="edit-danger" id="edit-delete">
+              이 할 일 삭제
+            </button>
+          </div>
+        </div>
+      </section>
+
       <div class="overlay" id="overlay" role="alertdialog" aria-modal="true">
         <div class="ov-imgwrap"><img id="ov-img" alt="" /></div>
         <div class="kicker" id="ov-kicker"></div>
@@ -1819,8 +1983,7 @@
         </div>
       </div>
 
-      <div class="toast" id="toast"></div>
-    </div>
+    <div class="toast" id="toast"></div>
 
     <script>
       (function () {
@@ -2139,6 +2302,11 @@
               toggleDone(t.id);
             });
             wireDelete(li.querySelector(".del"), t.id);
+            li.addEventListener("click", function (e) {
+              if (e.target.closest(".check") || e.target.closest(".del"))
+                return;
+              openEditSheet(t.id);
+            });
             listEl.appendChild(li);
           });
 
@@ -2354,6 +2522,14 @@
           renderHistoryList();
         });
 
+        // 시트를 열기 직전에 인풋 blur 등으로 레이아웃이 흔들리는 경우가 있어,
+        // 한 프레임 넘겨서 안정된 뒤에 open 애니메이션을 시작한다.
+        function nextPaint(fn) {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(fn);
+          });
+        }
+
         function openSheet() {
           var p = kstParts();
           calY = p.y;
@@ -2361,8 +2537,11 @@
           calSelected = null;
           renderHistory();
           settingsEl.classList.remove("open");
-          sheet.classList.add("open");
-          sheet.setAttribute("aria-hidden", "false");
+          editSheetEl.classList.remove("open");
+          nextPaint(function () {
+            sheet.classList.add("open");
+            sheet.setAttribute("aria-hidden", "false");
+          });
         }
         function closeSheet() {
           sheet.classList.remove("open");
@@ -2485,8 +2664,11 @@
         function openSettings() {
           renderSettings();
           sheet.classList.remove("open");
-          settingsEl.classList.add("open");
-          settingsEl.setAttribute("aria-hidden", "false");
+          editSheetEl.classList.remove("open");
+          nextPaint(function () {
+            settingsEl.classList.add("open");
+            settingsEl.setAttribute("aria-hidden", "false");
+          });
         }
         function closeSettings() {
           settingsEl.classList.remove("open");
@@ -2494,6 +2676,67 @@
         }
         $("setbtn").addEventListener("click", openSettings);
         $("setclose").addEventListener("click", closeSettings);
+
+        // ---------- 할 일 수정 시트 ----------
+        var editSheetEl = $("editsheet");
+        var editingId = null;
+        var editTitle = $("edit-title"),
+          editStakes = $("edit-stakes"),
+          editTime = $("edit-time"),
+          editSave = $("editsave");
+        function syncEditBtn() {
+          editSave.disabled = !(
+            editTitle.value.trim() &&
+            editStakes.value.trim() &&
+            editTime.value
+          );
+        }
+        editTitle.addEventListener("input", syncEditBtn);
+        editStakes.addEventListener("input", syncEditBtn);
+        editTime.addEventListener("input", syncEditBtn);
+        function openEditSheet(id) {
+          var t = findTask(id);
+          if (!t) return;
+          editingId = id;
+          editTitle.value = t.title;
+          editStakes.value = t.stakes || "";
+          editTime.value = fmtClock(t.due);
+          syncEditBtn();
+          sheet.classList.remove("open");
+          settingsEl.classList.remove("open");
+          nextPaint(function () {
+            editSheetEl.classList.add("open");
+            editSheetEl.setAttribute("aria-hidden", "false");
+          });
+        }
+        function closeEditSheet() {
+          editSheetEl.classList.remove("open");
+          editSheetEl.setAttribute("aria-hidden", "true");
+          editingId = null;
+        }
+        $("editclose").addEventListener("click", closeEditSheet);
+        $("editform").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var title = editTitle.value.trim(),
+            stakes = editStakes.value.trim();
+          if (!editingId || !title || !stakes || !editTime.value) return;
+          updateTask(editingId, title, stakes, editTime.value);
+          closeEditSheet();
+          toast("수정했다.");
+        });
+        $("edit-delete").addEventListener("click", function () {
+          if (!editingId) return;
+          var t = findTask(editingId);
+          if (!t) return;
+          var overdue = !t.done && t.due - Date.now() <= 0;
+          var msg = overdue
+            ? "못 한 걸로 기록할까?"
+            : "이 할 일을 지울까? (기록엔 안 남아)";
+          if (!window.confirm(msg)) return;
+          if (overdue) giveUp(editingId);
+          else removeTask(editingId);
+          closeEditSheet();
+        });
 
         // ---------- actions ----------
         function newId() {
@@ -2581,6 +2824,24 @@
           for (var i = 0; i < tasks.length; i++)
             if (tasks[i].id === id) return tasks[i];
           return null;
+        }
+
+        function updateTask(id, title, stakes, hhmm) {
+          var t = findTask(id);
+          if (!t) return;
+          var parts = hhmm.split(":");
+          var due = kstTimestamp(+parts[0], +parts[1]);
+          t.title = title;
+          t.stakes = stakes;
+          t.due = due;
+          // 마감이 바뀌었을 수 있으니 알림 발동 상태를 다시 계산
+          t.fired = firedFor(due);
+          t.punchCount = 0;
+          t.lastPunch = due < Date.now() ? Date.now() : 0;
+          save();
+          render();
+          checkAlarms();
+          syncPush();
         }
 
         function wireDelete(btn, id) {
@@ -2725,6 +2986,7 @@
           if (overlayOpen) $("ov-later").click();
           else if (sheet.classList.contains("open")) closeSheet();
           else if (settingsEl.classList.contains("open")) closeSettings();
+          else if (editSheetEl.classList.contains("open")) closeEditSheet();
         });
 
         // ---------- beep ----------
@@ -3023,11 +3285,20 @@
           headerEl = document.querySelector("header"),
           mainEl = document.querySelector("main");
         var vv = window.visualViewport;
+        var fitH = null,
+          fitT = null;
         function fitViewport() {
           if (!vv) return;
-          appEl.style.height = Math.round(vv.height) + "px";
-          appEl.style.transform =
-            "translateY(" + Math.round(vv.offsetTop) + "px)";
+          var h = Math.round(vv.height),
+            t = Math.round(vv.offsetTop);
+          // 값이 그대로면 다시 쓰지 않는다 — 반복 재측정 중 불필요하게
+          // transform을 재대입하면 그 위에 떠 있는 시트/오버레이의 위치
+          // 계산이 순간적으로 어긋나는 경우가 있어서 방지한다
+          if (h === fitH && t === fitT) return;
+          fitH = h;
+          fitT = t;
+          appEl.style.height = h + "px";
+          appEl.style.transform = "translateY(" + t + "px)";
         }
         if (vv) {
           vv.addEventListener("resize", fitViewport);
